@@ -27,7 +27,7 @@ def new_thread(thread_index):
     cherrypy.thread_data.db = MySQLdb.connect(
         Database.HOST, 
         Database.USER, 
-        Database.PASSWORD, 
+        Database.PASSWORD if Database.PASSWORD is not None else raw_input("Database password: "), 
         Database.DATABASE_NAME)
 
 def secure_headers():

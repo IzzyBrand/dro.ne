@@ -22,7 +22,7 @@ class App:
 class Database:
     HOST = "localhost"
     USER = "root"
-    PASSWORD = "dronesrcool"
+    PASSWORD = None  # manual input
     DATABASE_NAME = "dronedb"
 
 
