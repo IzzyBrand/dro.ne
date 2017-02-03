@@ -1,1 +1,1 @@
-mysql -u root -pdronesrcool dronedb
+mysql -u root -p dronedb
