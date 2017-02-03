@@ -1,0 +1,66 @@
+CREATE DATABASE  IF NOT EXISTS `dronedb` /*!40100 DEFAULT CHARACTER SET latin1 */;
+USE `dronedb`;
+-- MySQL dump 10.13  Distrib 5.6.28, for debian-linux-gnu (x86_64)
+--
+-- Host: localhost    Database: dronedb
+-- ------------------------------------------------------
+-- Server version	5.6.28-0ubuntu0.15.04.1
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8 */;
+/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
+/*!40103 SET TIME_ZONE='+00:00' */;
+/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
+/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+
+--
+-- Table structure for table `drones`
+--
+
+DROP TABLE IF EXISTS `drones`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `drones` (
+  `uid` varchar(8) DEFAULT NULL,
+  `name` varchar(32) DEFAULT NULL,
+  `status` varchar(16) DEFAULT NULL,
+  `command` varchar(16) DEFAULT NULL,
+  `error` varchar(16) DEFAULT NULL,
+  `auth` varchar(32) DEFAULT NULL,
+  `type` varchar(16) DEFAULT NULL,
+  `description` varchar(256) DEFAULT NULL,
+  `latitude` varchar(16) DEFAULT NULL,
+  `longitude` varchar(16) DEFAULT NULL,
+  `altitude` varchar(16) DEFAULT NULL,
+  `voltage` varchar(8) DEFAULT NULL,
+  `speed` varchar(8) DEFAULT NULL,
+  `rssi` varchar(8) DEFAULT NULL,
+  `zone` varchar(8) DEFAULT NULL,
+  `timestamp` varchar(32) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `drones`
+--
+
+LOCK TABLES `drones` WRITE;
+/*!40000 ALTER TABLE `drones` DISABLE KEYS */;
+INSERT INTO `drones` VALUES ('dUID','Annie',NULL,'idle',NULL,'fd87dad2731a9a275c5f54f78f1f77d1','tUID',NULL,'71.4553228809','97.426171765','21.555','1.158035','5.115777','55.48943','zUID','2017-01-29 19:44:55.846625'),('D123','Gregg',NULL,NULL,NULL,'fd87dad2731a9a275c5f54f78f1f77d1',NULL,NULL,'77.977805137','13.5541836729','46.1148169785','8.550759','7.211079','27.95964','zUID','2017-01-29 19:44:55.953430'),('D2355','Jimmy',NULL,NULL,NULL,'fd87dad2731a9a275c5f54f78f1f77d1',NULL,NULL,'70.6119263388','84.1414751545','40.7526786672','13.63825','0.913536','51.12281','ZABC','2017-01-29 19:44:54.729260');
+/*!40000 ALTER TABLE `drones` ENABLE KEYS */;
+UNLOCK TABLES;
+/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
+
+/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
+/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
+/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+
+-- Dump completed on 2017-02-03 15:41:43
