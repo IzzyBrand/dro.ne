@@ -1,0 +1,104 @@
+{% extends "view/base.html" %}
+
+{% block header %}
+<div class="page-title">Welcome, {{nickname}}.</div>
+<div class="navigation">
+    <a href="/logout">Sign Out</a>
+</div>
+<script>
+    $(function() {
+        $("#accordion").accordion({
+            header: "h3",
+            collapsible: true,
+            active: false,
+            heightStyle: "content"
+        });
+    });
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="status" style="display:none;" id="status">{{status}}</div>
+<script src="/static/js/rtdisplay.js" type="text/javascript"></script>
+<script type="text/javascript">
+    var uids = {{uids}};
+    var nUIDs = uids.length;
+    update();
+    if ($("#status").text() != "") {  // display status if it exists
+        $("#status").show();
+        setTimeout(function() {
+            $("#status").fadeOut("slow");
+        }, 3000);
+    }
+</script>
+<div class="container" style="margin-top:-20px;">
+    <div class="row grid-title">Drones:</div>
+    <div id="header" class="row">
+        <div id="header-uid" class="col-sm-1 text-center grid-header">UID</div>
+        <div id="header-name" class="col-sm-1 text-center grid-header">Name</div>
+        <div id="header-latitude" class="col-sm-1 text-center grid-header">Lat.</div>
+        <div id="header-longitude" class="col-sm-1 text-center grid-header">Long.</div>
+        <div id="header-altitude" class="col-sm-1 text-center grid-header">Alt.</div>
+        <div id="header-voltage" class="col-sm-1 text-center grid-header">Volt.</div>
+        <div id="header-speed" class="col-sm-1 text-center grid-header">Speed</div>
+        <div id="header-rssi" class="col-sm-1 text-center grid-header">RSSI</div>
+        <div id="header-destination" class="col-sm-1 text-center grid-header">Dest.</div>
+        <div id="header-timestamp" class="col-sm-1 text-center grid-header">Time</div>
+    </div>
+    {% for uid in uids %}
+    <div id="{{uid}}" class="row">
+        <div id="{{uid}}-uid" class="col-sm-1 text-center grid-element">{{uid}}</div>
+        <div id="{{uid}}-name" class="col-sm-1 text-center grid-element"></div>
+        <div id="{{uid}}-latitude" class="col-sm-1 text-center grid-element"></div>
+        <div id="{{uid}}-longitude" class="col-sm-1 text-center grid-element"></div>
+        <div id="{{uid}}-altitude" class="col-sm-1 text-center grid-element"></div>
+        <div id="{{uid}}-voltage" class="col-sm-1 text-center grid-element"></div>
+        <div id="{{uid}}-speed" class="col-sm-1 text-center grid-element"></div>
+        <div id="{{uid}}-rssi" class="col-sm-1 text-center grid-element"></div>
+        <div id="{{uid}}-destination" class="col-sm-1 text-center grid-element"></div>
+        <div id="{{uid}}-timestamp" class="col-sm-1 text-center grid-element"></div>
+    </div>
+    {% endfor %}
+    </div>
+</div>
+
+<!-- Add or remove entries from drone database -->
+<div class="container" id="accordion" style="padding-bottom:20px">
+    {% set tables = [drones_fields,types_fields,zones_fields] %}
+    {% set labels = ["drone","type","zone"] %}
+    {% set indices = [0,1,2] -%}
+    
+    {% for idx in indices %}
+        {% set label = labels[idx] %}
+        {% set table = tables[idx] %}
+    <h3>Add new {{label}}</h3>
+    <div id="new-{{label}}">
+        <form name="new-{{label}}-form" action="" method="get">
+            <input type="hidden" name="action" value="new-{{label}}">
+            {% for field in table %}
+            <div class="row">
+                <div class="col-sm-2 text-right">{{field|title}}:</div>
+                <div class="col-sm-2"><input type="text" class="grid-input" name="{{field}}"></div>
+            </div>
+            {% endfor %}
+            <div class="row login">
+                <div class="col-sm-2"></div>
+                <div class="col-sm-2"><input type="submit" class="grid-button" name="add" value="Add {{label}}" /></div>
+            </div>
+        </form>
+    </div>
+    {% endfor %}
+
+    <h3>Remove by UID</h3>
+    <div id="remove-uid">
+        <form name="remove-uid-form" action="" method="get">
+            <input type="hidden" name="action" value="remove-uid">
+            <div class="row"><div class="col-sm-4 danger">This action is permanent.</div></div>
+            <div class="row">
+                <div class="col-sm-2"><input type="text" class="grid-input" name="uid"></div>
+                <div class="col-sm-2"><input type="submit" class="grid-button danger" name="remove" value="Delete Entry" /></div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

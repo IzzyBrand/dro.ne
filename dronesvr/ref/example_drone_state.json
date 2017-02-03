@@ -1,0 +1,15 @@
+{
+    "uid": "dUID", 
+    "name": "Gregg",
+    "latitude": "64.366432",
+    "longitude": "32.663322",
+    "altitude": "20.522",
+    "voltage": "12.556",
+    "destination": {
+        "uid": "zUID",
+        "description": "landing zone across from Nelson",
+        "latitude": "60.233662",
+        "longitude": "33.66133"
+    },
+    "timestamp": "2017-01-22 13:00:27.235690"
+}
