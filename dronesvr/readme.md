@@ -1,5 +1,11 @@
-To start the server:
-    $ sh start
+# dronesvr
 
-To explore the MySQL database:
+# # To start the server:
+    ```
+    $ sh start
+    ```
+
+# # To explore the MySQL database:
+    ```
     $ sh startdb
+    ```
