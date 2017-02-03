@@ -3,5 +3,9 @@
 # Compile python
 *.pyc
 
-# Exclude client session data
+# Exclude folders
 dronesvr/clientdata/sessions/*
+dronesvr/log/*
+
+# Exception
+!.gitkeep 
