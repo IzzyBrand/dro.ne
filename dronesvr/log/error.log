@@ -13109,3 +13109,40 @@ Request Headers:
 [02/Feb/2017:23:28:33] ENGINE Bus EXITING
 [02/Feb/2017:23:28:33] ENGINE Bus EXITED
 [02/Feb/2017:23:28:33] ENGINE Waiting for child threads to terminate...
+[02/Feb/2017:23:39:38] ENGINE Listening for SIGHUP.
+[02/Feb/2017:23:39:38] ENGINE Listening for SIGTERM.
+[02/Feb/2017:23:39:38] ENGINE Listening for SIGUSR1.
+[02/Feb/2017:23:39:38] ENGINE Bus STARTING
+[02/Feb/2017:23:39:38] ENGINE Started monitor thread '_TimeoutMonitor'.
+[02/Feb/2017:23:39:38] ENGINE Started monitor thread 'Autoreloader'.
+[02/Feb/2017:23:39:38] ENGINE Serving on http://0.0.0.0
+[02/Feb/2017:23:39:38] ENGINE Bus STARTED
+[02/Feb/2017:23:39:44] ENGINE Keyboard Interrupt: shutting down bus
+[02/Feb/2017:23:39:44] ENGINE Bus STOPPING
+[02/Feb/2017:23:39:44] ENGINE HTTP Server cherrypy._cpwsgi_server.CPWSGIServer(('0.0.0.0', 80)) shut down
+[02/Feb/2017:23:39:44] ENGINE Stopped thread 'Autoreloader'.
+[02/Feb/2017:23:39:44] ENGINE Stopped thread '_TimeoutMonitor'.
+[02/Feb/2017:23:39:44] ENGINE Bus STOPPED
+[02/Feb/2017:23:39:44] ENGINE Bus EXITING
+[02/Feb/2017:23:39:44] ENGINE Bus EXITED
+[02/Feb/2017:23:39:44] ENGINE Waiting for child threads to terminate...
+[02/Feb/2017:23:40:09] ENGINE Listening for SIGHUP.
+[02/Feb/2017:23:40:09] ENGINE Listening for SIGTERM.
+[02/Feb/2017:23:40:09] ENGINE Listening for SIGUSR1.
+[02/Feb/2017:23:40:09] ENGINE Bus STARTING
+[02/Feb/2017:23:40:09] ENGINE Started monitor thread '_TimeoutMonitor'.
+[02/Feb/2017:23:40:09] ENGINE Started monitor thread 'Autoreloader'.
+[02/Feb/2017:23:40:09] ENGINE Serving on http://0.0.0.0
+[02/Feb/2017:23:40:09] ENGINE Bus STARTED
+[02/Feb/2017:23:40:16]  storage_type is deprecated. Supply storage_class instead
+[02/Feb/2017:23:40:16] ENGINE Started monitor thread 'Session cleanup'.
+[02/Feb/2017:23:46:17] ENGINE Keyboard Interrupt: shutting down bus
+[02/Feb/2017:23:46:17] ENGINE Bus STOPPING
+[02/Feb/2017:23:46:17] ENGINE HTTP Server cherrypy._cpwsgi_server.CPWSGIServer(('0.0.0.0', 80)) shut down
+[02/Feb/2017:23:46:17] ENGINE Stopped thread 'Autoreloader'.
+[02/Feb/2017:23:46:17] ENGINE Stopped thread 'Session cleanup'.
+[02/Feb/2017:23:46:17] ENGINE Stopped thread '_TimeoutMonitor'.
+[02/Feb/2017:23:46:17] ENGINE Bus STOPPED
+[02/Feb/2017:23:46:17] ENGINE Bus EXITING
+[02/Feb/2017:23:46:17] ENGINE Bus EXITED
+[02/Feb/2017:23:46:17] ENGINE Waiting for child threads to terminate...

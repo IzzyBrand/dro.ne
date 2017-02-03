@@ -22325,3 +22325,7 @@
 138.16.161.60 - - [02/Feb/2017:23:05:11] "GET /api?uid=dUID HTTP/1.1" 200 19 "" "python-requests/2.13.0"
 138.16.161.60 - - [02/Feb/2017:23:05:16] "GET /api?uid=dUID HTTP/1.1" 200 19 "" "python-requests/2.13.0"
 138.16.161.60 - - [02/Feb/2017:23:10:28] "GET /api?uid=dUID&subset=zone HTTP/1.1" 200 72 "" "python-requests/2.13.0"
+127.0.0.1 - - [02/Feb/2017:23:40:17] "GET / HTTP/1.1" 200 745 "" "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:44.0) Gecko/20100101 Firefox/44.0"
+127.0.0.1 - - [02/Feb/2017:23:40:17] "GET /static/img/favicon.png HTTP/1.1" 404 637 "" "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:44.0) Gecko/20100101 Firefox/44.0"
+138.16.161.212 - - [02/Feb/2017:23:40:22] "GET /api?uid=dUID HTTP/1.1" 200 19 "" "python-requests/2.4.3 CPython/2.7.9 Linux/4.4.38-v7+"
+138.16.161.212 - - [02/Feb/2017:23:40:32] "GET /api?uid=dUID&subset=zone HTTP/1.1" 200 72 "" "python-requests/2.4.3 CPython/2.7.9 Linux/4.4.38-v7+"

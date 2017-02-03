@@ -1,2 +1,5 @@
 # Compiled python
 *.pyc
+
+# Exclude client session data
+dronesvr/clientdata/sessions/*
