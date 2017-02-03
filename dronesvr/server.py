@@ -5,7 +5,7 @@ import os
 import MySQLdb
 import cherrypy
 
-
+# TODO: replace this with an environment variable?
 CURRDIRR = os.path.dirname(os.path.abspath(__file__))
 
 def get_app(conf):
@@ -27,7 +27,7 @@ def new_thread(thread_index):
     cherrypy.thread_data.db = MySQLdb.connect(
         Database.HOST, 
         Database.USER, 
-        Database.PASSWORD if Database.PASSWORD is not None else raw_input("Database password: "), 
+        os.environ[Database.PASSWORD_ENV_VAR],
         Database.DATABASE_NAME)
 
 def secure_headers():
