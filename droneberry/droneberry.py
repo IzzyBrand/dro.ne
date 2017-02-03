@@ -5,6 +5,7 @@ import json
 import hashlib
 import datetime
 import time
+from select import select
 from dronekit import connect
 
 class Drone:
@@ -135,5 +136,12 @@ class Drone:
 	
 
 if __name__ == "__main__":
-	d = Drone()
+	d = Drone()		# init the drone object
+	select_input = ''
+	while(1):
+		select_input = ''
+		select([], select_input,[],1)
+		if select_input is not '':
+			print 'Read ' + select_input
+
 	
