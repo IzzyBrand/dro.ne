@@ -1,4 +1,6 @@
-# Compiled python
+.DS_Store
+
+# Compile python
 *.pyc
 
 # Exclude client session data
