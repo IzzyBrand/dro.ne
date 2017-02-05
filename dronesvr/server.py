@@ -1,4 +1,5 @@
-from lib.controllers import Controller, API
+from lib.controllers import Controller
+from lib.api import API
 from lib.globals import Configuration, Database
 
 import os

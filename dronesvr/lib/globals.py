@@ -24,7 +24,9 @@ class Database:
     USER = "root"
     PASSWORD_ENV_VAR = "DRONE_DB_PWD"  # name of environmental variable
     DATABASE_NAME = "dronedb"
-
+    DRONE_TABLE = "drones"
+    ZONE_TABLE = "zones"
+    TYPE_TABLE = "types"
 
 class UIDConst:
     LENGTH = 7  # total length, NOT including hardcoded values below
