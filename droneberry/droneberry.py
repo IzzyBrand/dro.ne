@@ -14,9 +14,10 @@ class Drone:
 		# self.pixhawk = connect('/dev/ttyS0', baud = 57600) # for on the raspberry PI via telem2
 
 		# TODO: load from config
-		self.api_url = "http://synapse/api"
-		self.name = 'Gregg'
-		self.uid = 'dUID'
+		self.api_url = "http://localhost/api"
+		self.name = 'test'
+		self.uid = 'DR1'
+		self.auth = 'fd87dad2731a9a275c5f54f78f1f77d1'
 
 		self.status = 'idle' # drone turns on in idle state
 
@@ -30,7 +31,7 @@ class Drone:
 	def post_status(self):
 		 payload = {
 			 "uid": self.uid,
-			 "auth": rt._encode("dronesrcool"),
+			 "auth": self.auth
 			 "state": json.dumps(self.get_status_from_pixhawk())
 		 }
 		 response = requests.post(self.api_url, data=payload)
@@ -138,10 +139,23 @@ class Drone:
 if __name__ == "__main__":
 	d = Drone()		# init the drone object
 	select_input = ''
+	status_update_interval = 5
+	iters_since_update = 0
+	old_command = ''
+	new_command = ''
 	while(1):
-		select_input = ''
-		select([], select_input,[],1)
-		if select_input is not '':
-			print 'Read ' + select_input
+		# select_input = ''
+		# select([], select_input,[],1)
+		# if select_input is not '':
+		# 	print 'Read ' + select_input
+		new_command = self.get_command()
+
+		if new_command is not old_command:
+			if new_command is 'idle';
+			
+
+		if iters_since_update > status_update_interval:
+			self.post_status()
+		sleep(1)
 
 	
