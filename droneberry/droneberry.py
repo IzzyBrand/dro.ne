@@ -10,7 +10,7 @@ from dronekit import connect
 
 class Drone:
 	def __init__(self):
-		# self.pixhawk = connect('/dev/cu.usbmodem1', baud = 115200) # for on mac via USB
+		self.pixhawk = connect('/dev/cu.usbmodem1', baud = 115200) # for on mac via USB
 		# self.pixhawk = connect('/dev/ttyS0', baud = 57600) # for on the raspberry PI via telem2
 
 		# TODO: load from config
@@ -18,7 +18,6 @@ class Drone:
 		self.name = 'test'
 		self.uid = 'DR1'
 		self.auth = 'fd87dad2731a9a275c5f54f78f1f77d1'
-
 		self.status = 'idle' # drone turns on in idle state
 
 		#self.get_state() # flesh out the state
@@ -31,11 +30,11 @@ class Drone:
 	def post_status(self):
 		 payload = {
 			 "uid": self.uid,
-			 "auth": self.auth
-			 "state": json.dumps(self.get_status_from_pixhawk())
+			 "auth": self.auth,
+			 "state": json.dumps(self.get_state())
 		 }
 		 response = requests.post(self.api_url, data=payload)
-		 print response
+		 return response
 
 	def get(self, subset=None):
 		if subset: payload = "uid={}&subset={}".format(self.uid, subset)
@@ -68,6 +67,11 @@ class Drone:
 		}
 		post_status()
 
+	def update_zone(self):
+		r = self.get_zone()
+		if r['latitude'] and r['longitude'] and r['altutide']:
+			self.zone = r
+
 	#################################################################################
 	# PIXHAWK CONNECTIVITY/STATUS
 	#################################################################################
@@ -78,7 +82,7 @@ class Drone:
 		self.flight_status = {
 			# "type": self.type,
 			# "name": self.name,
-			"active": 1,
+			"status": self.status,
 			"timestamp": str(datetime.datetime.now()),
 			"latitude": self.pixhawk.location.global_relative_frame.lat,
 			"longitude": self.pixhawk.location.global_relative_frame.lon,
@@ -104,58 +108,104 @@ class Drone:
 		target_location = LocationGlobalRelative(lat, lon, alt)
 		self.pixhawk.simple_goto(target_location, speed)
 
-
-	def arm_and_takeoff(self, target_alt=20):
+	def arm_and_takeoff(self, target_alt=50):
 		# Don't try to arm until autopilot is ready
-		while not vehicle.is_armable:
+		while not self.pixhawk.is_armable:
 			print " Waiting for vehicle to initialise..."
 			time.sleep(1)
 
 		print "Arming motors"
 		# Copter should arm in GUIDED mode
-		self.vehicle.mode	= VehicleMode("GUIDED")
-		self.vehicle.armed   = True
+		self.pixhawk.mode	= VehicleMode("GUIDED")
+		self.pixhawk.armed   = True
 
 		# Confirm vehicle armed before attempting to take off
-		while not vehicle.armed:
+		while not pixhawk.armed:
 			print " Waiting for arming..."
 			time.sleep(1)
 
 		print "Taking off!"
-		vehicle.simple_takeoff(target_alt) # Take off to target altitude
+		self.pixhawk.simple_takeoff(target_alt) # Take off to target altitude
+
+		# IZZY 2/5/17 - If we simply use a while loop with delay to wait for takeoff altitude, we
+		# won't be able to respond to commands. This could be better implemented as a function that checks
+		# if the drone has reached it's target location and blocks other functions until complete?
 
 		# Wait until the vehicle reaches a safe height before processing the goto (otherwise the command
 		#  after Vehicle.simple_takeoff will execute immediately).
 		while True:
-			print " Altitude: ", vehicle.location.global_relative_frame.alt
+			print " Altitude: ", self.pixhawk.location.global_relative_frame.alt
 			#Break and return from function just below target altitude.
-			if vehicle.location.global_relative_frame.alt>=target_alt*0.95:
+			if self.pixhawk.location.global_relative_frame.alt>=target_alt*0.95:
 				print "Reached target altitude"
 				break
+			d.post_status() # keep posting status updates while climbing to altitude
 			time.sleep(1)
 
-	
+	def mission_start(self):
+		# perform some check to make sure the destination location is valid/not the one we're already at
+		self.status = 'takingoff'
+		self.arm_and_takeoff() # takeoff to the default altitude
+		self.status = 'flying'
+		d.post_status()	# post a status update to indicate forward flight
+		self.go_to_location(self.zone['latitude'], self.zone['longitude'], self.zone['altitude'])
+
+	def rtl(self):
+		if self.status == 'flying':
+			print 'WARNING: RTL.'
+			self.pixhawk.mode = VehicleMode("RTL")
+			self.status = 'rtl'
+		else: print 'WARNING: cannot rtl while', d.status
+		
 
 if __name__ == "__main__":
 	d = Drone()		# init the drone object
 	select_input = ''
-	status_update_interval = 5
+	idle_status_update_interval = 5
 	iters_since_update = 0
 	old_command = ''
 	new_command = ''
 	while(1):
-		# select_input = ''
-		# select([], select_input,[],1)
-		# if select_input is not '':
-		# 	print 'Read ' + select_input
-		new_command = self.get_command()
+		new_command = d.get_command()
 
-		if new_command is not old_command:
-			if new_command is 'idle';
+		if new_command != old_command:
+			old_command = new_command
+			print 'Received', new_command, 'Current status:', d.status
+			if new_command == 'rtl': d.rtl()
+				
+			elif new_command == 'pause':
+				if d.status == 'flying':
+					# TODO: how do I pause? set velocity to zero?
+					# change mode to POS hold/LOITER? TBD
+					d.status = 'paused'
+				else: print 'WARNING: cannot pause while', d.status
+
+			elif new_command == 'takeoff':
+				if d.status == 'idle':
+					# TODO: somehow calculate if the drone has enough battery left to perform the mission
+					d.mission_start()
+				else: print 'WARNING: cannot takeoff while', d.status
+
+			elif new_command == 'idle':
+				if d.status == 'landed':
+					print 'idle'
+					d.status = 'idle'
+				else: print 'WARNING: cannot idle while', d.status
+			elif new_command == 'updatezone':
+				if d.pixhawk.armed:
+					print 'ERROR: cannot update the target zone while', d.status
+				else: d.get_zone()
+			else:
+				print 'ERROR: command', new_command, 'not recognized.'
+
 			
+		# post the status more slowly while idling
+		if d.status == 'idle' and iters_since_update > idle_status_update_interval:
+			d.post_status()
+			iters_since_update = 0
+		else: d.post_status()
 
-		if iters_since_update > status_update_interval:
-			self.post_status()
-		sleep(1)
+		iters_since_update += 1
+		time.sleep(1)
 
 	
