@@ -89,7 +89,7 @@ class Drone:
 			"altitude": self.pixhawk.location.global_relative_frame.alt,
 			"voltage": self.pixhawk.battery.voltage,
 			"speed": self.pixhawk.groundspeed,
-			"rssi": self.pixhawk.last_heartbeat, # use the time since the last heartbeat becase we don't have internet connectivity
+			"rssi": self.pixhawk.last_heartbeat # use the time since the last heartbeat becase we don't have internet connectivity
 		}
 		return self.flight_status
 
