@@ -79,7 +79,6 @@ class API(object):
                 # Return all information
                 return json.dumps(_get_all(uid))
             else:
-                # Return empty json
                 return "{}"
 
         else:  # if no UID is specified, return a list of all drone UIDs
@@ -103,5 +102,6 @@ class API(object):
             cherrypy.response.status = 201  # Created
             return json.dumps(state)
         else:
+            # print "{}, {}, {}".format(uid,auth,state)  # debug only
             cherrypy.response.status = 401  # Unauthorized
             return "Unauthorized"
