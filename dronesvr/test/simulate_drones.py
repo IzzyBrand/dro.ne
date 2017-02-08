@@ -19,6 +19,7 @@ class RequestTester:
             "latitude": random.random()*100 - 50,
             "longitude": random.random()*100 - 50,
             "altitude": random.random()*50,
+            "timestamp": str(datetime.datetime.now())
         }
         return d
 

@@ -18,13 +18,10 @@ class DBFunc:
     # Check if user exists, and if so, compare the md5 hash
     # of the given password with that stored in ADMIN table for
     # specified username
-    def authenticate_user(self, username, password):
+    def authenticate_user(self, table, username, password):
         if self._user_exists(username):
-            pwd_hash = self._query("SELECT password FROM admin WHERE username='{}'".format(username))
-            if pwd_hash == Encoding.md5(password):
-                return True
-            else:
-                return False
+            pwd_hash = self._query("SELECT password FROM {} WHERE username='{}'".format(table,username))
+            return (pwd_hash == Encoding.md5(password))
 
     # Retrieve user specific data from ADMIN table
     def get_user_info(self, field, username):

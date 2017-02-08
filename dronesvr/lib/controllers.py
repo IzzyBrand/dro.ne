@@ -53,7 +53,7 @@ class Controller(object):
     @cherrypy.expose
     def login(self, username=None, password=None, **kwargs):
         if username is not None and password is not None:
-            status = DB.authenticate_user(username,password)
+            status = DB.authenticate_user("admin",username,password)
             if status:
                 cherrypy.session[Session.AUTH_KEY] = username
                 raise Web.redirect(Pages.URL["admin"])

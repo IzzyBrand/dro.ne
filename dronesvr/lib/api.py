@@ -105,3 +105,13 @@ class API(object):
             # print "{}, {}, {}".format(uid,auth,state)  # debug only
             cherrypy.response.status = 401  # Unauthorized
             return "Unauthorized"
+
+    """ Queue new request (user request for a drone pickup / dropoff) """
+    def QUEUE(self, username=None, password=None, request=None):
+        if username is not None and password is not None:
+            # Authenticate username and password. Allow both user and admin credentials.
+            if DB.authenticate_user("user",username,password) or \
+            DB.authenticate_user("admin",username,password):
+                print "User authenticated."
+            else:
+                print "User does not exist!"
