@@ -1,6 +1,6 @@
 from jinja2 import Environment, FileSystemLoader
 
-from . util import DBFunc, UID, Timestamp, Web
+from . util import DBFunc, UID, Timestamp, Web, Secure
 from . globals import Session, Pages, App, Database
 
 import random
@@ -53,12 +53,14 @@ class Controller(object):
     @cherrypy.expose
     def login(self, username=None, password=None, **kwargs):
         if username is not None and password is not None:
-            status = DB.authenticate_user("admin",username,password)
-            if status:
-                cherrypy.session[Session.AUTH_KEY] = username
-                raise Web.redirect(Pages.URL["admin"])
-            else:
-                raise Web.redirect(Pages.URL["index"])
+            # check that username is safe before doing anything with database
+            if Secure.credentials(username):
+                status = DB.authenticate_user(username,password,req_type=2)  # requires admin credentials
+                if status:
+                    cherrypy.session[Session.AUTH_KEY] = username
+                    raise Web.redirect(Pages.URL["admin"])
+                else:
+                    raise Web.redirect(Pages.URL["index"])
         cherrypy.session[Session.AUTH_KEY] = None
         raise Web.redirect(Pages.URL["index"])
     # Logout endpoint (removes logged-in user session and redirects)

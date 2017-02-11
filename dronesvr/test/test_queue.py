@@ -3,12 +3,12 @@ import json, datetime
 
 def get_job():
     return {
-        "uid": "J30jjfs",
+        "uid": "J30AFJO",
         "pickupzone": "Z123",
         "dropoffzone": "Z456",
         "sender": "ben",
         "receiver": "izzy",
-        "desired_pickup_time": "now",
+        "desired_pickup_time": str(datetime.datetime.now()),
         "timestamp": str(datetime.datetime.now())
     }
 
@@ -27,4 +27,8 @@ preparedReq = s.prepare_request(req)
 
 resp = s.send(preparedReq)
 
-print resp.status_code, json.loads(resp.text)
+print resp.status_code
+try:
+    print json.loads(resp.text)
+except:
+    print resp.text

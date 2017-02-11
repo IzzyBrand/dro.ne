@@ -11,6 +11,7 @@ DB = DBFunc()
 DRONES = Database.DRONE_TABLE
 ZONES = Database.ZONE_TABLE
 TYPES = Database.TYPE_TABLE
+QUEUE = Database.QUEUE_TABLE
 
 """ The API object enables realtime requests of drone state """
 @cherrypy.expose
@@ -109,16 +110,20 @@ class API(object):
     """ Queue new request (user request for a drone pickup / dropoff) """
     def PUT(self, username=None, password=None, job=None):
         if username is not None and password is not None:
-            # Authenticate username and password. Allow all credential types.
+            # Authenticate username and password. Allow all credential types (user,mod,admin).
             if DB.authenticate_user(username,password):
                 if job is not None:
-                    # TODO:
                     # Parse the job
+                    job = json.loads(job)  # JSON string to dict
+                    uid = job["uid"]  # have the UID handy
                     # Check that the UID doesn't exist in the queue already
-                    # Add the item to the end of the queue
-                    # Send back a happy 201 message indicating success
-                    cherrypy.response.status = 201  # item queued
-                    return json.dumps(job)
+                    if not DB.uid_exists(uid,QUEUE):
+                        DB.queue_job(job)  # queue the job
+                        cherrypy.response.status = 201  # item queued
+                        return json.dumps(job)  # echo back to client what was just PUT
+                    else:
+                        cherrypy.response.status = 409  # conflict
+                        return "Queue job already exists with UID ({}).".format(uid)
                 else:
                     cherrypy.response.status = 200  # OK
                     return "No job received."

@@ -27,12 +27,15 @@ class Database:
     DRONE_TABLE = "drones"
     ZONE_TABLE = "zones"
     TYPE_TABLE = "types"
+    QUEUE_TABLE = "queue"
+    USER_TABLE = "user"
 
 class UIDConst:
     LENGTH = 7  # total length, NOT including hardcoded values below
-    DRONE_ID = "D"  # found at the beginning of each drone UID
-    ZONE_ID = "Z"  # found at the beginning of each zone UID
-    TYPE_ID = "T"  # found at the beginning of each type UID
+    DRONE_ID = "D"  # at beginning of each drone UID
+    ZONE_ID = "Z"  # at beginning of each zone UID
+    TYPE_ID = "T"  # at beginning of each type UID
+    JOB_ID = "J"  # at beginning of each job UID (in queue)  
 
 class Pages:
     # Path to template file

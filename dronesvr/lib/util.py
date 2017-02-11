@@ -5,14 +5,20 @@ import random
 import datetime
 import cherrypy
 import hashlib
+import re
 
 
 """Functions for querying MySQL database."""
 class DBFunc:
 
+    #######################
+    ### User management ###
+    #######################
+
     # Check if user exists in ADMIN table
     def _user_exists(self, username):
-        r = self._query("SELECT username FROM user WHERE username='{}'".format(username))
+        r = self._query("SELECT username FROM user WHERE username=%s",(username,))
+        print r
         return len(r) is not 0
 
     # Check if user exists, and if so, compare the md5 hash
@@ -28,19 +34,23 @@ class DBFunc:
 
     # Retrieve user specific data from ADMIN table
     def get_user_info(self, field, username):
-        return self._query("SELECT {} FROM user WHERE username='{}'".format(field,username))
+        return self._query("SELECT {} FROM user WHERE username=%s".format(field),(username,))
+
+    ############################
+    ### Drone API management ###
+    ############################
 
     # Verify that given UID exists in TABLE
     # Example usage: DBFunc.exists("D2Da037d","drones")
     def uid_exists(self, uid, table):
-        r = self._query("SELECT uid FROM {} WHERE uid='{}'".format(table,uid))
+        r = self._query("SELECT uid FROM {} WHERE uid=%s".format(table),(uid,))
         return len(r) is not 0
 
     # Check that the provided AUTH hash code matches that which 
     # we have in our database for the given UID
     # Example usage: DBFunc.authorized("D2Da037d","fe3d1760dfad167b51b4ffc60f8bbefe")
     def authorized(self, uid, auth, table="drones"):
-        r = self._query("SELECT auth FROM {} WHERE uid='{}'".format(table,uid))
+        r = self._query("SELECT auth FROM {} WHERE uid=%s".format(table),(uid,))
         return r == auth
 
     # Return a list of all values within a given field of a given table
@@ -61,43 +71,74 @@ class DBFunc:
     # Get value contained in FIELD from TABLE in row matching UID
     # Example usage: DBFunc.get("name","drones","D2Da037d")
     def get(self, field, table, uid):
-        return self._query("SELECT {} FROM {} WHERE uid='{}'".format(field,table,uid))
+        return self._query("SELECT {} FROM {} WHERE uid=%s".format(field,table),(uid,))
 
     # Set value of FIELD within TABLE in row matching UID
     # Example usage: DBFunc.set("name","Gregg","drones","D2Da037d")
     def set(self, field, value, table, uid):
-        return self._query("UPDATE {} SET {}='{}' WHERE uid='{}'".format(table,field,value,uid), return_data=False)
+        return self._query("UPDATE {} SET {}=%s WHERE uid=%s".format(table,field),(value,uid),return_data=False)
 
     # Get all values from all FIELDS in TABLE
     # Example usage: DBFunc.get_all("uid","drones")
     def get_all(self, field, table):
         return self._query("SELECT {} FROM {}".format(field,table), return_all=True)
 
-    # Insert new row with UID into TABLE
-    # Example usage: DBFunc.insert("0jFJdaam27","zones")
-    def insert(self, uid, table):
-        return self._query("INSERT INTO {} (uid) VALUES ('{}'')".format(table,uid), return_data=False)
+    ####################
+    ### Job queueing ###
+    ####################
+
+    # Queue a new drone delivery job. Inputted parameter job must be a dict containing
+    # all required values for the drone delivery (into MySQL table QUEUE).
+    def queue_job(self, job):
+        keys = ",".join(job.keys())
+        vals = "','".join(job.values())  # joins values with quotes (start & end don't have quotes)
+        sql = "INSERT INTO queue ({}) VALUES ('{}')".format(keys,vals)
+        return self._query(sql,return_data=False)
+
+    ###############################
+    ### Database administration ###
+    ###############################
+
+    # # Insert new row with UID into TABLE
+    # # Example usage: DBFunc.insert("0jFJdaam27","zones")
+    # def insert(self, uid, table):
+    #     return self._query("INSERT INTO {} (uid) VALUES ('{}'')".format(table,uid), return_data=False)
 
     # Delete row matching UID in TABLE
     def delete(self, uid, table):
-        self._query("DELETE FROM {} WHERE uid='{}'".format(table,uid), return_data=False)
+        self._query("DELETE FROM {} WHERE uid=%s".format(table),(uid,),return_data=False)
+
+    ########################
+    ### Helper functions ###
+    ########################
 
     # Generic database query function
-    def _query(self, q, return_data=True, return_idx=0, return_all=False):
+    def _query(self, query, values=None, return_data=True, return_idx=0, return_all=False):
         connection = cherrypy.thread_data.db  # get db connection
         connection.ping(True)  # this should refresh the connection to the database if it has timed out: http://www.neotitans.com/resources/python/mysql-python-connection-error-2006.html
         cursor = connection.cursor()  # get cursor to execute SQL queries
-        cursor.execute(q)
+        if values is None:
+            cursor.execute(query)
+        else:
+            cursor.execute(query, values)   # escape values to prevent SQL injection
         connection.commit()  # save inserted data into database
-
         if return_data:
             rows = cursor.fetchall()
             if not return_all and len(rows) > 0:  # only return from first row
                 return rows[0][return_idx]
             else:  # return all data or if result is empty
                 return rows
-
         cursor.close()
+
+
+""" Prevent XSS or SQL injection attacks """
+class Secure:
+
+    # Regex for username
+    @classmethod
+    def credentials(self,string):
+        pattern = "^[a-zA-Z]\w{2,14}$"  # must start with letter, btwn 3-15 characters
+        return (re.match(pattern, string) is not None)
 
 
 """ Generate consistent UIDs """
