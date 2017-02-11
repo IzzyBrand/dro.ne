@@ -12,20 +12,23 @@ class DBFunc:
 
     # Check if user exists in ADMIN table
     def _user_exists(self, username):
-        r = self._query("SELECT username FROM admin WHERE username='{}'".format(username))
+        r = self._query("SELECT username FROM user WHERE username='{}'".format(username))
         return len(r) is not 0
 
     # Check if user exists, and if so, compare the md5 hash
-    # of the given password with that stored in ADMIN table for
-    # specified username
-    def authenticate_user(self, table, username, password):
+    # of the given password with given username. Additionally, the
+    # type in the user entry must be greater than or equal to the type
+    # that is passed to the function. Types are as follows:
+    # 0 = user, 1 = moderator, 2 = administrator
+    def authenticate_user(self, username, password, req_type=0):
         if self._user_exists(username):
-            pwd_hash = self._query("SELECT password FROM {} WHERE username='{}'".format(table,username))
-            return (pwd_hash == Encoding.md5(password))
+            pwd_hash = self.get_user_info("password",username)
+            usr_type = self.get_user_info("type",username)
+            return (usr_type >= req_type) and (pwd_hash == Encoding.md5(password))
 
     # Retrieve user specific data from ADMIN table
     def get_user_info(self, field, username):
-        return self._query("SELECT {} FROM admin WHERE username='{}'".format(field,username))
+        return self._query("SELECT {} FROM user WHERE username='{}'".format(field,username))
 
     # Verify that given UID exists in TABLE
     # Example usage: DBFunc.exists("D2Da037d","drones")

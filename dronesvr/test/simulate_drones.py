@@ -8,6 +8,9 @@ import datetime
 import time
 
 
+PWD = ""   #remove password
+
+
 class RequestTester:
 
     def __init__(self):
@@ -58,7 +61,7 @@ if __name__ == "__main__":
     rt = RequestTester()
     uid_list = rt.get_all()
     uid_list = json.loads(uid_list.text)
-    auth = rt._encode("dronesrcool")
+    auth = rt._encode(PWD)
 
     # Simulate all drones sending POSTing to server
     while True:
