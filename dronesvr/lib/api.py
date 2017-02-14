@@ -40,7 +40,8 @@ class API(object):
                 return {
                     "maxpayload": DB.get("maxpayload",TYPES,type_uid),
                     "minvoltage": DB.get("minvoltage",TYPES,type_uid),
-                    "topspeed": DB.get("topspeed",TYPES,type_uid)
+                    "topspeed": DB.get("topspeed",TYPES,type_uid),
+                    "description": DB.get("description",TYPES,type_uid)
                 }
 
             def _get_zone(uid):
@@ -48,18 +49,34 @@ class API(object):
                 return {
                     "latitude": DB.get("latitude",ZONES,zone_uid),
                     "longitude": DB.get("longitude",ZONES,zone_uid),
-                    "altitude": DB.get("altitude",ZONES,zone_uid)
+                    "altitude": DB.get("altitude",ZONES,zone_uid),
+                    "description": DB.get("description",ZONES,zone_uid)
                 }
 
             def _get_command(uid):
                 return {"command": DB.get("command",DRONES,uid)}
 
+            def _get_state(uid):
+                return {
+                    "command": DB.get("command",DRONES,uid),
+                    "status": DB.get("status",DRONES,uid),
+                    "error": DB.get("error",DRONES,uid),
+                    "voltage": DB.get("voltage",DRONES,uid)
+                }
+
+            def _get_general(uid):
+                return {
+                    "name": DB.get("name",DRONES,uid),
+                    "description": DB.get("description",DRONES,uid)
+                }
+
             def _get_all(uid):
                 return {
-                    "command": _get_command(uid),
                     "position": _get_position(uid),
                     "type": _get_type(uid),
-                    "zone": _get_zone(uid)
+                    "zone": _get_zone(uid),
+                    "state": _get_state(uid),
+                    "general": _get_general(uid)
                 }
 
             # Return requested subset to client
@@ -76,6 +93,12 @@ class API(object):
             elif subset == "zone":
                 # Return information related to drone destination (landing zone)
                 return json.dumps(_get_zone(uid))
+            elif subset == "state":
+                # Return information related to drone state
+                return json.dumps(_get_state(uid))
+            elif subset == "general":
+                # Return general drone information
+                return json.dumps(_get_general(uid))
             elif subset == "all":
                 # Return all information
                 return json.dumps(_get_all(uid))

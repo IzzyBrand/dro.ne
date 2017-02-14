@@ -14,27 +14,28 @@ class DBFunc:
             Database.USER,
             os.environ[Database.PWD_ENV_VAR],
             Database.DB_NAME)
-        self.uid = None
 
-    def set_uid(self,uid):
-        self.uid = uid
+    ################################
+    ### Data retrieval functions ###
+    ################################
 
-    def get_uid(self):
-        return self.uid
+    def set(self,new_val,uid,field,table):
+        self._query("UPDATE {} SET {}='{}' WHERE uid='{}'".format(table,field,new_val,uid),ret_data=False)
 
-    def get_drone(self,field):
-        return self._get(field,"drones")
+    def get(self,uid,field,table):
+        return self._query("SELECT {} FROM {} WHERE uid='{}'".format(field,table,uid))
 
-    def get_zone(self,field):
-        return self._get(field,"zones")
+    def get_all(self,field,table):
+        res = self._query("SELECT {} FROM {}".format(field,table),ret_all=True)
+        ret = []
+        for val in res:
+            ret.append(val[0])
+        return ret
 
-    def get_type(self,field):
-        return self._get(field,"types")
 
-    def _get(self,field,table):
-        if self.uid is None:
-            raise Exception("Please set UID prior to requested value from database.")
-        return self._query("SELECT {} FROM {} WHERE uid='{}'".format(field,table,self.uid))
+    #################################
+    ### Database helper functions ###
+    #################################
 
     # Query the database
     def _query(self,q,ret_data=True,ret_all=False,ret_row=0):
