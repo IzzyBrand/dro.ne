@@ -1,4 +1,6 @@
+# Generic hidden files
 .DS_Store
+Thumb.db
 
 # Compile python
 *.pyc

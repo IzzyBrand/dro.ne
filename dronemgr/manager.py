@@ -1,5 +1,6 @@
 from lib.util import Status, DBFunc
 from lib.controllers import Controller
+from lib.globals import Timing
 
 import os
 import time
@@ -38,7 +39,7 @@ class Manager:
     def block(self):
         while self.running:
             self.controller.step()
-            time.sleep(1)
+            time.sleep(Timing.UPDATE_INTERVAL)
 
 
 if __name__ == "__main__":
