@@ -91,3 +91,15 @@ class Set:
 
     def status(self,uid,new_status):
         self.db.set(new_status,uid,"status","drones")
+
+
+""" Manage and pop jobs from queue """
+class Queue:
+
+    # If uid is None (default), pop off the oldest item on the queue
+    def pop(self,uid=None):
+        if uid is not None:
+            # Check if uid exists in queue
+                # if yes,
+                # if no, uid=None
+        self.db.pop(uid)

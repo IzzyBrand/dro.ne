@@ -25,6 +25,11 @@ class DBFunc:
     def get(self,uid,field,table):
         return self._query("SELECT {} FROM {} WHERE uid='{}'".format(field,table,uid))
 
+    def pop(self,uid,table):
+        # TODO: remove row matching uid in given database
+        # uid has already been validated (will exist or be None)
+        pass
+
     def get_all(self,field,table):
         res = self._query("SELECT {} FROM {}".format(field,table),ret_all=True)
         ret = []
