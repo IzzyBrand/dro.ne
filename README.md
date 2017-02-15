@@ -19,7 +19,6 @@ drone.it
 send.it
 deliver.it
 drone.at
-sendthin.gs
 drone.site
 drone.tech
 send.tech
@@ -34,4 +33,3 @@ drone2.me
 sendto.me
 drone.site
 send.tech
-sendthin.gs ($$$)
