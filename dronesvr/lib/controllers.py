@@ -12,9 +12,9 @@ import json
 DB = DBFunc()  
 
 # Names of database tables
-DRONES = Database.DRONE_TABLE
-ZONES = Database.ZONE_TABLE
-TYPES = Database.TYPE_TABLE
+DRONES = Database.DRONES_TABLE
+ZONES = Database.ZONES_TABLE
+TYPES = Database.TYPES_TABLE
 
 """
 The Controller class serves the requested page to the client (given a number of

@@ -14,16 +14,22 @@ class Controller:
         self.type_uids = self.db.get_all("uid","types")
         self.get = Get(self.db)
         self.set = Set(self.db)
+        # self.queue = Queue(self.db)
         Status.out("Loaded information from database")
 
     # Run the following at each processing iteration (step)
     def step(self):
         for uid in self.drone_uids:
+            # Drone info
             name = self.get.general(uid)["name"]
             command = self.get.state(uid)["status"]
-            Status.out("{}'s command: {}".format(name,command))
+            job = self.get.job(uid)
+            Status.out("{} ({}) is on job '{}'".format(name,command,job["uid"]))
+
             # choose random command just to verify that setting values works
-            self.set.status(uid,random.choice(["idle","takeoff","rtl","pause","landing"]))
+            self.set.status(uid,random.choice([
+                "idle","takeoff","rtl","pause","landing"
+            ]))
 
 
 """ Get information from database """
@@ -59,6 +65,18 @@ class Get:
             "description": self.db.get(zone_uid,"description","zones")
         }
 
+    def job(self,uid):
+        job_uid = self.db.get(uid,"job","drones")
+        return {
+            "uid": self.db.get(job_uid,"uid","jobs"),
+            "pickupzone": self.db.get(job_uid,"pickupzone","jobs"),
+            "dropoffzone": self.db.get(job_uid,"dropoffzone","jobs"),
+            "sender": self.db.get(job_uid,"sender","jobs"),
+            "receiver": self.db.get(job_uid,"receiver","jobs"),
+            "desired_pickup_time": self.db.get(job_uid,"desired_pickup_time","jobs"),
+            "timestamp": self.db.get(job_uid,"timestamp","jobs")
+        }
+
     def state(self,uid):
         return {
             "command": self.db.get(uid,"command","drones"),
@@ -92,14 +110,33 @@ class Set:
     def status(self,uid,new_status):
         self.db.set(new_status,uid,"status","drones")
 
+    def job(self,uid,new_job=None):
+        self.db.set(new_job,uid,"job","drones")
 
-""" Manage and pop jobs from queue """
-class Queue:
 
-    # If uid is None (default), pop off the oldest item on the queue
-    def pop(self,uid=None):
-        if uid is not None:
-            # Check if uid exists in queue
-                # if yes,
-                # if no, uid=None
-        self.db.pop(uid)
+# """ Manage and pop jobs from queue """
+# class Queue:
+
+#     def __init__(self,db):
+#         self.db = db
+#         self.field_list = [  # fields to return from QUEUE table
+#             "uid", 
+#             "pickupzone", 
+#             "dropoffzone", 
+#             "sender", 
+#             "receiver", 
+#             "desired_pickup_time", 
+#             "timestamp"
+#         ]
+
+#     # If uid is None (default), pop off the oldest item on the queue
+#     def pop(self,uid=None):
+#         # If uid has been defined but does not exist, set to None
+#         if uid is not None and not self.db.uid_exists(uid,"queue"):
+#             uid = None
+#         job_raw = self.db.pop(uid,self.field_list)[0]
+#         ret = dict()  # instantiate return dictionary
+#         # populate the return dictionary
+#         for index, field in enumerate(job_raw):
+#             ret[self.field_list[index]] = field
+#         return ret

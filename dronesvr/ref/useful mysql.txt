@@ -15,3 +15,6 @@ ALTER TABLE tbl_Country DROP COLUMN IsDeleted;
 
 // update value in row
 UPDATE table_name SET field=newvalue WHERE clause
+
+// drop row
+DELETE FROM table_name [WHERE clause]

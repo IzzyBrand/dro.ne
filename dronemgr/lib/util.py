@@ -19,16 +19,30 @@ class DBFunc:
     ### Data retrieval functions ###
     ################################
 
+    def uid_exists(self,uid,table):
+        r = self._query("SELECT uid FROM {} WHERE uid='{}'".format(table,uid))
+        return len(r) is not 0
+
     def set(self,new_val,uid,field,table):
         self._query("UPDATE {} SET {}='{}' WHERE uid='{}'".format(table,field,new_val,uid),ret_data=False)
 
     def get(self,uid,field,table):
         return self._query("SELECT {} FROM {} WHERE uid='{}'".format(field,table,uid))
 
-    def pop(self,uid,table):
-        # TODO: remove row matching uid in given database
-        # uid has already been validated (will exist or be None)
-        pass
+    def delete(self,uid,table):
+        self._query("DELETE FROM {} WHERE uid='{}'".format(table,uid))
+
+    # Pop UID (or if None, oldest job in queue) and return all fields
+    # Parameter field_list is a list of all fields to return from function
+    # def pop(self,uid,field_list):
+    #     fields_str = ",".join(field_list)
+    #     if uid is not None:  # pop row with matching uid
+    #         row = self._query("SELECT {} FROM queue WHERE uid='{}'".format(fields_str,uid),ret_all=True)
+    #         # self._query("DELETE FROM queue WHERE uid='{}'")
+    #     else:  # pop first row (this is the oldest job in the queue)
+    #         row = self._query("SELECT {} FROM queue LIMIT 1".format(fields_str),ret_all=True)
+    #         # self._query("DELETE FROM queue LIMIT 1")
+    #     return row
 
     def get_all(self,field,table):
         res = self._query("SELECT {} FROM {}".format(field,table),ret_all=True)

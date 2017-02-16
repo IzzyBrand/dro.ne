@@ -8,10 +8,10 @@ import json
 DB = DBFunc()  
 
 # Names of database tables
-DRONES = Database.DRONE_TABLE
-ZONES = Database.ZONE_TABLE
-TYPES = Database.TYPE_TABLE
-QUEUE = Database.QUEUE_TABLE
+DRONES = Database.DRONES_TABLE
+ZONES = Database.ZONES_TABLE
+TYPES = Database.TYPES_TABLE
+JOBS = Database.JOBS_TABLE
 
 """ The API object enables realtime requests of drone state """
 @cherrypy.expose
@@ -53,6 +53,18 @@ class API(object):
                     "description": DB.get("description",ZONES,zone_uid)
                 }
 
+            def _get_job(uid):
+                job_uid = DB.get("job",DRONES,uid)
+                return {
+                    "uid": DB.get("uid",JOBS,job_uid),
+                    "pickupzone": DB.get("pickupzone",JOBS,job_uid),
+                    "dropoffzone": DB.get("dropoffzone",JOBS,job_uid),
+                    "sender": DB.get("sender",JOBS,job_uid),
+                    "receiver": DB.get("receiver",JOBS,job_uid),
+                    "desired_pickup_time": DB.get("desired_pickup_time",JOBS,job_uid),
+                    "timestamp": DB.get("timestamp",JOBS,job_uid)
+                }
+
             def _get_command(uid):
                 return {"command": DB.get("command",DRONES,uid)}
 
@@ -91,8 +103,11 @@ class API(object):
                 # Return information related to drone type
                 return json.dumps(_get_type(uid))
             elif subset == "zone":
-                # Return information related to drone destination (landing zone)
+                # Return information related to drone current/previous zone (TODO clarify)
                 return json.dumps(_get_zone(uid))
+            elif subset == "job":
+                # Return information related to drone's current job
+                return json.dumps(_get_job(uid))
             elif subset == "state":
                 # Return information related to drone state
                 return json.dumps(_get_state(uid))

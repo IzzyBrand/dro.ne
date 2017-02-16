@@ -24,18 +24,19 @@ class Database:
     USER = "root"
     PASSWORD_ENV_VAR = "DRONE_DB_PWD"  # name of environmental variable
     DATABASE_NAME = "dronedb"
-    DRONE_TABLE = "drones"
-    ZONE_TABLE = "zones"
-    TYPE_TABLE = "types"
-    QUEUE_TABLE = "queue"
-    USER_TABLE = "user"
+    DRONES_TABLE = "drones"
+    ZONES_TABLE = "zones"
+    TYPES_TABLE = "types"
+    JOBS_TABLE = "jobs"
+    USERS_TABLE = "users"
 
 class UIDConst:
     LENGTH = 7  # total length, NOT including hardcoded values below
     DRONE_ID = "D"  # at beginning of each drone UID
     ZONE_ID = "Z"  # at beginning of each zone UID
     TYPE_ID = "T"  # at beginning of each type UID
-    JOB_ID = "J"  # at beginning of each job UID (in queue)  
+    JOB_ID = "J"  # at beginning of each job UID  
+    USER_ID = "U"  # at beginning of each user UID
 
 class Pages:
     # Path to template file

@@ -34,7 +34,7 @@ class DBFunc:
 
     # Retrieve user specific data from ADMIN table
     def get_user_info(self, field, username):
-        return self._query("SELECT {} FROM user WHERE username=%s".format(field),(username,))
+        return self._query("SELECT {} FROM {} WHERE username=%s".format(field,Database.USERS_TABLE),(username,))
 
     ############################
     ### Drone API management ###
