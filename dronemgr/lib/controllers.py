@@ -14,7 +14,6 @@ class Controller:
         self.type_uids = self.db.get_all("uid","types")
         self.get = Get(self.db)
         self.set = Set(self.db)
-        # self.queue = Queue(self.db)
         Status.out("Loaded information from database")
 
     # Run the following at each processing iteration (step)
@@ -112,31 +111,3 @@ class Set:
 
     def job(self,uid,new_job=None):
         self.db.set(new_job,uid,"job","drones")
-
-
-# """ Manage and pop jobs from queue """
-# class Queue:
-
-#     def __init__(self,db):
-#         self.db = db
-#         self.field_list = [  # fields to return from QUEUE table
-#             "uid", 
-#             "pickupzone", 
-#             "dropoffzone", 
-#             "sender", 
-#             "receiver", 
-#             "desired_pickup_time", 
-#             "timestamp"
-#         ]
-
-#     # If uid is None (default), pop off the oldest item on the queue
-#     def pop(self,uid=None):
-#         # If uid has been defined but does not exist, set to None
-#         if uid is not None and not self.db.uid_exists(uid,"queue"):
-#             uid = None
-#         job_raw = self.db.pop(uid,self.field_list)[0]
-#         ret = dict()  # instantiate return dictionary
-#         # populate the return dictionary
-#         for index, field in enumerate(job_raw):
-#             ret[self.field_list[index]] = field
-#         return ret
