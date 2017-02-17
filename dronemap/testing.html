@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset=utf-8 />
-<title>Rotating and controllable marker</title>
+<title>dro.ne</title>
 <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
 <script src='https://api.mapbox.com/mapbox.js/v3.0.1/mapbox.js'></script>
 <link href='https://api.mapbox.com/mapbox.js/v3.0.1/mapbox.css' rel='stylesheet' />
@@ -12,92 +12,91 @@
 </style>
 </head>
 <body>
-
-
 <div id='map'></div>
-
 <script>
+
 L.mapbox.accessToken = 'pk.eyJ1IjoiaXp6eWJyYW5kIiwiYSI6ImNpeTdzdHh3ZDAwNncycXN4eTYyY2k3dTAifQ.WzrAcd4xaQ0dd7ur3u0fSQ';
-// MIT-licensed code by Benjamin Becquet
-// https://github.com/bbecquet/Leaflet.PolylineDecorator
-L.RotatedMarker = L.Marker.extend({
-  options: { angle: 0 },
-  _setPos: function(pos) {
-    L.Marker.prototype._setPos.call(this, pos);
-    if (L.DomUtil.TRANSFORM) {
-      // use the CSS transform rule if available
-      this._icon.style[L.DomUtil.TRANSFORM] += ' rotate(' + this.options.angle + 'deg)';
-    } else if (L.Browser.ie) {
-      // fallback for IE6, IE7, IE8
-      var rad = this.options.angle * L.LatLng.DEG_TO_RAD,
-      costheta = Math.cos(rad),
-      sintheta = Math.sin(rad);
-      this._icon.style.filter += ' progid:DXImageTransform.Microsoft.Matrix(sizingMethod=\'auto expand\', M11=' +
-        costheta + ', M12=' + (-sintheta) + ', M21=' + sintheta + ', M22=' + costheta + ')';
-    }
-  }
-});
-L.rotatedMarker = function(pos, options) {
-    return new L.RotatedMarker(pos, options);
-};
 
 var map = L.mapbox.map('map', 'mapbox.streets', {
     keyboard: false
 }).setView([41.8258611,-71.4034908],17);
 
+var zoneLayer = L.mapbox.featureLayer().addTo(map); // layer to hold the zone icons
 
-var zoneLayer
- = L.mapbox.featureLayer().addTo(map); // layer to hold the zone icons
+// generates a zone feature geoJson which can we badded to a feature collection
+function generateZoneFeature(name, lat, lon) {
+    return {
+      "type": "Feature",
+      "geometry": {
+          "type": "Point",
+          "coordinates": [lon, lat]
+      },
+      "properties": {
+          "title": name, // name of point to show when clicked
+          "icon": {
+              "iconUrl": "zone.png",
+              "iconSize": [40, 40], // size of the icon
+              "iconAnchor": [20, 20], // point of the icon which will correspond to marker's location
+              "popupAnchor": [0, -20], // point from which the popup should open relative to the iconAnchor
+              "className": "dot"
+          }
+      }
+  }
+}
 
-var geoJson = {
+var testCoord = 41.826317
+
+var zoneGeoJson = {
   type: 'FeatureCollection',
-  features: [{
-      "type": "Feature",
-      "geometry": {
-          "type": "Point",
-          "coordinates": [-75.00, 40]
-      },
-      "properties": {
-          "title": "Small astronaut",
-          "icon": {
-              "iconUrl": "/mapbox.js/assets/images/astronaut1.png",
-              "iconSize": [50, 50], // size of the icon
-              "iconAnchor": [25, 25], // point of the icon which will correspond to marker's location
-              "popupAnchor": [0, -25], // point from which the popup should open relative to the iconAnchor
-              "className": "dot"
-          }
-      }
-  }, {
-      "type": "Feature",
-      "geometry": {
-          "type": "Point",
-          "coordinates": [-74.00, 40]
-      },
-      "properties": {
-          "title": "Big astronaut",
-          "icon": {
-              "iconUrl": "/mapbox.js/assets/images/astronaut2.png",
-              "iconSize": [100, 100],
-              "iconAnchor": [50, 50],
-              "popupAnchor": [0, -55],
-              "className": "dot"
-          }
-      }
-  }]
+  features: [
+  generateZoneFeature('Ruth Simmon\'s Eest', 41.826317, -71.401175),
+  generateZoneFeature('Wriston West', 41.825031, -71.402029),
+  generateZoneFeature('Main Green Center', 41.826063, -71.403322),
+  generateZoneFeature('Pembroke Field Center', 41.829639, -71.399062),
+  generateZoneFeature('The Walk North', 41.827663, -71.401896)
+  ]
 };
 
 // Set a custom icon on each marker based on feature properties.
-zoneLayer
-.on('layeradd', function(e) {
-    var marker = e.layer,
-        feature = marker.feature;
-
+zoneLayer.on('layeradd', function(e) {
+    var marker = e.layer, feature = marker.feature;
     marker.setIcon(L.icon(feature.properties.icon));
 });
 
 // Add features to the map.
-zoneLayer
-.setGeoJSON(geoJson);
+zoneLayer.setGeoJSON(zoneGeoJson);
+
+
+//droneLayer.setGeoJSON(droneGeoJson);
+
+setInterval(function move(){
+    testCoord += 0.01
+    console.log(testCoord)
+    zoneLayer.setGeoJSON(zoneGeoJson);
+    }, 1000)
+
+// MIT-licensed code by Benjamin Becquet
+// // https://github.com/bbecquet/Leaflet.PolylineDecorator
+// L.RotatedMarker = L.Marker.extend({
+//   options: { angle: 0 },
+//   _setPos: function(pos) {
+//     L.Marker.prototype._setPos.call(this, pos);
+//     if (L.DomUtil.TRANSFORM) {
+//       // use the CSS transform rule if available
+//       this._icon.style[L.DomUtil.TRANSFORM] += ' rotate(' + this.options.angle + 'deg)';
+//     } else if (L.Browser.ie) {
+//       // fallback for IE6, IE7, IE8
+//       var rad = this.options.angle * L.LatLng.DEG_TO_RAD,
+//       costheta = Math.cos(rad),
+//       sintheta = Math.sin(rad);
+//       this._icon.style.filter += ' progid:DXImageTransform.Microsoft.Matrix(sizingMethod=\'auto expand\', M11=' +
+//         costheta + ', M12=' + (-sintheta) + ', M21=' + sintheta + ', M22=' + costheta + ')';
+//     }
+//   }
+// });
+// L.rotatedMarker = function(pos, options) {
+//     return new L.RotatedMarker(pos, options);
+// };
 
 // var marker = L.rotatedMarker(new L.LatLng(37.9, -77), {
 //   icon: L.divIcon({
@@ -133,7 +132,5 @@ zoneLayer
 //   }
 // }, true);
 </script>
-
-
 </body>
 </html>
