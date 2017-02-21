@@ -1,4 +1,7 @@
 {
-	'uid' : 'DR1',
-	''
+	"api_url" : "http://localhost/api",
+	"name" : "test",
+	"uid" : "DR1",
+	"auth" : "fd87dad2731a9a275c5f54f78f1f77d1",
+	"startup_status" : "initializing"
 }
