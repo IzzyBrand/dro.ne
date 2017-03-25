@@ -24,15 +24,20 @@ import datetime
 import time
 from missionHandler import upload_and_verify
 from serverberry import ServerInterface
-from dronekit import connect
+from dronekit import connect, VehicleMode
 
 
 class Drone:
+
+	self._COMMAND_SET_MISSION 	= 'updatezone'
+	self._COMMAND_TAKEOFF 		= 'takeoff'
+	self._COMMAND_RTL 			= 'rtl'
 
 	def start(self):
 		self.server = ServerInterface()
 		self.pixhawk = connect('/dev/cu.usbmodem1', baud = 115200) # for on mac via USB
 		self._log('Connected to pixhawk.')
+		self._prev_command = ''
 		# self.pixhawk = connect('/dev/ttyS0', baud = 57600) # for on the raspberry PI via telem2
 		config_loaded = self._load_config() # load info about the uid and auth
 		online = True # TODO: verify internet connection
@@ -47,7 +52,28 @@ class Drone:
 	# STEP
 	#################################################################################
 	def step(self):
+		# CHECK BATTERY VOLTAGE
+		self._read_from_pixhawk()
+		if self.status['voltage'] < voltage_emergency_threshold:
+			# RTL
 
+		# SEND STATE UPDATE
+		self.server.post(self.state)
+
+		# REQUEST COMMAND
+		received_command = self.server.get_command()
+
+		# ACT ON COMMAND
+		if received_command != self._prev_command:
+			self._log('NEW COMMAND - ' + received_command)
+
+			if received_command == self._COMMAND_RTL:
+				self.pixhawk.mode = VehicleMode('RTL')
+
+			elif received_command == self._COMMAND_SET_MISSION:
+
+			elif received_command == self._COMMAND_TAKEOFF:
+				self.pixhawk.mode = VehicleMode('AUTO')
 
 	#################################################################################
 	# UTIL
