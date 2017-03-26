@@ -22,6 +22,7 @@ FUNCTIONALITY BRAINSTORM
 import json
 import datetime
 import time
+from gpiozero import Button
 from missionHandler import upload_and_verify
 from serverberry import ServerInterface
 from dronekit import connect, VehicleMode
@@ -45,6 +46,10 @@ class Drone:
 		self.current_action = ''
 		config_loaded = self._load_config() # load info about the uid and auth
 		online = True # TODO: verify internet connection
+		self.button = Button(2)	# set up the button to control the servos
+		self.button.when_pressed  = self.gripper.open
+		self.button.when_released = self.gripper.close
+
 		return config_loaded and online
 
 	def stop(self):
@@ -143,11 +148,13 @@ class Drone:
 
 		elif self.current_action = 'upload_new_mission':
 			if not self.pixhawk.armed:
-					if upload_and_verify(self.pixhawk, 'missionFile'): # TODO: how we specify which mission?
+					wp_file = self.server.get_job()['wp_file']
+					wp_to_load = self.wp_path + '/' + wp_file + '.txt'
+					if upload_and_verify(self.pixhawk, wp_path + '/' + wp_file):
 						self.pixhawk.commands.download() # download the new commands
 						self.current_action = ''
 					else: 
-						self._log('Failed to upload the mission')
+						self._log('Failed to upload the mission: ' + wp_to_load)
 
 
 
@@ -168,18 +175,13 @@ class Drone:
 		# self.uid = config_json['uid']
 		# self.auth = config_json['auth']
 		self.status = config_json['startup_status']
+		self.wp_path = config_json['wp_path']
 		self._log('Successfully loaded config from ' + file)
 		return True
 
 	# logging abstracted so we can change where we are logging
 	def _log(self, msg):
 		print "[DEBUG]: {0}".format(msg)
-
-	# request a new zone from the server and update the local target zone
-	def _update_zone(self):
-		r = self.server.get_zone()
-		if r['latitude'] and r['longitude'] and r['altutide']:
-			self.zone = r
 
 	#################################################################################
 	# PIXHAWK CONNECTIVITY

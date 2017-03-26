@@ -26,14 +26,15 @@ class ServerInterface:
 		else: payload = "uid={}".format(self.uid)
 		return requests.get(self.api_url, params=payload)
 
+
 	# get a command from the server
 	def get_command(self):
 		response = self.get()
 		return json.loads(response.text)['command']
 
-	# get a command from the server
-	def get_zone(self):
-		response = self.get('zone')
+	# get the job json from the server (this has all the info about the mission)
+	def get_job(self):
+		response = self.get('job')
 		return json.loads(response.text)
 	
 	# send and error message to the server
