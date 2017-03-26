@@ -25,12 +25,14 @@ import time
 from missionHandler import upload_and_verify
 from serverberry import ServerInterface
 from dronekit import connect, VehicleMode
+from pymavlink import mavutil
 
 
 class Drone:
 
 	self._COMMAND_SET_MISSION 	= 'updatezone'
 	self._COMMAND_TAKEOFF 		= 'takeoff'
+	self._COMMAND_LAND 			= 'land'
 	self._COMMAND_PAUSE			= 'pause'
 	self._COMMAND_RTL 			= 'rtl'
 
@@ -56,7 +58,7 @@ class Drone:
 	def step(self):
 		# CHECK BATTERY VOLTAGE
 		self._read_from_pixhawk()
-		if self.status['voltage'] < voltage_emergency_threshold:
+		if self.state['voltage'] < voltage_emergency_threshold:
 			# RTL
 
 		# SEND STATE UPDATE
@@ -84,11 +86,14 @@ class Drone:
 			elif received_command == self._COMMAND_TAKEOFF:
 				self.current_action = 'arm'
 
+			elif received_command == self._COMMAND_LAND:
+				if self.current_action = 'wait_landing':
+					self.pixhawk.commands.next += 1 # advance to the landing waypoint
+					self.current_action = 'landing'
+				else: self._log('WARNING - Cannot land while ' + self.current_action)
+
 			elif recieved_command == self._COMMAND_SET_MISSION:
 				self.current_action = 'upload_new_mission'
-
-
-
 
 			self._prev_command = received_command
 
@@ -113,6 +118,17 @@ class Drone:
 		elif self.current_action == 'mission_start'
 			self.pixhawk.commands.next = 0	# start from the first waypoint
 			self.pixhawk.mode = VehicleMode('AUTO')
+			self.current_action = 'flying'
+
+		elif self.current_action = 'flying':
+			next_cmd = self.pixhawk.commands.next
+			# TODO - Determine if this should be mavutil.mavlink.MAV_CMD_NAV_LAND instead?
+			if self.pixhawk.commands[next_cmd].command == mavutil.mavlink.MAV_CMD_NAV_LOITER_UNLIM:
+				# we've reached the loiter waypoint
+				self.current_action = 'wait_landing'
+
+		elif self.current_action = 'landing' and not self.pixhawk.armed:
+			# TODO - release the package
 			self.current_action = ''
 
 		elif self.current_action = 'pause':
@@ -127,7 +143,7 @@ class Drone:
 
 		elif self.current_action = 'upload_new_mission':
 			if not self.pixhawk.armed:
-					if upload_and_verify('missionFile'): # TODO: how we specify which mission?
+					if upload_and_verify(self.pixhawk, 'missionFile'): # TODO: how we specify which mission?
 						self.pixhawk.commands.download() # download the new commands
 						self.current_action = ''
 					else: 
