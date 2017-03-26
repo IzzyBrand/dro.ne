@@ -46,9 +46,10 @@ class Drone:
 		self.current_action = ''
 		config_loaded = self._load_config() # load info about the uid and auth
 		online = True # TODO: verify internet connection
-		self.button = Button(2)	# set up the button to control the servos
-		self.button.when_pressed  = self.gripper.open
-		self.button.when_released = self.gripper.close
+		self.gripper = Gripper(18) # set up the gripper
+		self.button = Button(2)	   # set up the button
+		self.button.when_pressed   = self.gripper.open
+		self.button.when_released  = self.gripper.close
 
 		return config_loaded and online
 
@@ -133,7 +134,7 @@ class Drone:
 				self.current_action = 'wait_landing'
 
 		elif self.current_action = 'landing' and not self.pixhawk.armed:
-			# TODO - release the package
+			self.gripper.open()
 			self.current_action = ''
 
 		elif self.current_action = 'pause':
