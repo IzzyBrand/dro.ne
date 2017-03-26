@@ -31,14 +31,16 @@ class Drone:
 
 	self._COMMAND_SET_MISSION 	= 'updatezone'
 	self._COMMAND_TAKEOFF 		= 'takeoff'
+	self._COMMAND_PAUSE			= 'pause'
 	self._COMMAND_RTL 			= 'rtl'
 
 	def start(self):
 		self.server = ServerInterface()
 		self.pixhawk = connect('/dev/cu.usbmodem1', baud = 115200) # for on mac via USB
+		# self.pixhawk = connect('/dev/ttyS0', baud = 57600) # for on the raspberry PI via telem2
 		self._log('Connected to pixhawk.')
 		self._prev_command = ''
-		# self.pixhawk = connect('/dev/ttyS0', baud = 57600) # for on the raspberry PI via telem2
+		self.current_action = ''
 		config_loaded = self._load_config() # load info about the uid and auth
 		online = True # TODO: verify internet connection
 		return config_loaded and online
@@ -63,17 +65,75 @@ class Drone:
 		# REQUEST COMMAND
 		received_command = self.server.get_command()
 
-		# ACT ON COMMAND
+		# ACT ON NEW COMMAND COMMAND
 		if received_command != self._prev_command:
 			self._log('NEW COMMAND - ' + received_command)
 
 			if received_command == self._COMMAND_RTL:
-				self.pixhawk.mode = VehicleMode('RTL')
+				if self.current_action == 'arm' or self.current_action == 'takeoff':
+					# disarm if we haven't taken off yet
+					self.current_action = 'disarm'
+				else: self.current_action = 'rtl'
 
-			elif received_command == self._COMMAND_SET_MISSION:
+			elif received_command == self._COMMAND_PAUSE:
+				if self.current_action == 'arm' or self.current_action == 'takeoff':
+					# disarm if we haven't taken off yet
+					self.current_action = 'disarm'
+				else: self.current_action = 'pause'
 
 			elif received_command == self._COMMAND_TAKEOFF:
-				self.pixhawk.mode = VehicleMode('AUTO')
+				self.current_action = 'arm'
+
+			elif recieved_command == self._COMMAND_SET_MISSION:
+				self.current_action = 'upload_new_mission'
+
+
+
+
+			self._prev_command = received_command
+
+		# ACT ON ONGOING COMMAND
+		# the self.current_action allows us to have ongoing instructions
+		if self.current_action == 'arm':
+			self.pixhawk.commands.wait_ready() # we can't fly until we have commands list
+			self.pixhawk.mode = VehicleMode('GUIDED') # we arm and takeoff in guided mode
+			self.pixhawk.armed = True
+			self.current_action = 'takeoff'
+
+		elif self.current_action == 'disarm': 
+			self.pixhawk.armed = False
+			if not self.pixhawk.armed: self.current_action = ''
+			else:	self._log('DISARM FAILED')
+
+		elif self.current_action == 'takeoff' \
+			and self.pixhawk.armed: # we need to verify that the pixhawk is armed
+			self.pixhawk.simple_takeoff(20)
+			self.current_action = 'mission_start'
+
+		elif self.current_action == 'mission_start'
+			self.pixhawk.commands.next = 0	# start from the first waypoint
+			self.pixhawk.mode = VehicleMode('AUTO')
+			self.current_action = ''
+
+		elif self.current_action = 'pause':
+			self.pixhawk.mode = VehicleMode('LOITER')
+			self._log('LOITER')
+			self.current_action = ''
+
+		elif self.current_action = 'rtl':
+			self.pixhawk.mode = VehicleMode('RTL')
+			self._log('RTL')
+			self.current_action = ''
+
+		elif self.current_action = 'upload_new_mission':
+			if not self.pixhawk.armed:
+					if upload_and_verify('missionFile'): # TODO: how we specify which mission?
+						self.pixhawk.commands.download() # download the new commands
+						self.current_action = ''
+					else: 
+						self._log('Failed to upload the mission')
+
+
 
 	#################################################################################
 	# UTIL
