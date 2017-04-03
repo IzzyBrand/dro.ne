@@ -1,4 +1,4 @@
-# Servo Control
+"""Controls the servos to actuate the gripper underneath the drone."""
 import time
 import wiringpi
  

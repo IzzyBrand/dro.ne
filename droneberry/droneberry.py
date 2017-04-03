@@ -22,6 +22,7 @@ FUNCTIONALITY BRAINSTORM
 import json
 import datetime
 import time
+from gripper import Gripper
 from gpiozero import Button
 from missionHandler import upload_and_verify
 from serverberry import ServerInterface
