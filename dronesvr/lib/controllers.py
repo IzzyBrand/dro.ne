@@ -30,44 +30,76 @@ class Controller(object):
         tmpl = Environment(loader=FileSystemLoader(".")).get_template(Pages.TEMPLATE["index"])
         page_data = self._get_page_data()
         return tmpl.render(page_data)
-
     # Authorization page (login prompt)
     @cherrypy.expose
     def auth(self):
         tmpl = Environment(loader=FileSystemLoader(".")).get_template(Pages.TEMPLATE["auth"])
         username = cherrypy.session.get(Session.AUTH_KEY)
         if username is not None:
-            raise Web.redirect(Pages.URL["admin"])
+            if DB.check_permissions(username,0):
+                raise Web.redirect(Pages.URL["user"])
+            elif DB.check_permissions(username,1):
+                raise Web.redirect(Pages.URL["super"])
+            elif DB.check_permissions(username,2):
+                raise Web.redirect(Pages.URL["admin"])
+            else:  # unknown user_type; log user out
+                cherrypy.session[Session.AUTH_KEY] = None
+                raise Web.redirect(Pages.URL["auth"])
         else:
             page_data = self._get_page_data()
             return tmpl.render(page_data)
+    # User landing page
+    @cherrypy.expose
+    def user(self):
+        tmpl = Environment(loader=FileSystemLoader(".")).get_template(Pages.TEMPLATE["user"])
+        username = cherrypy.session.get(Session.AUTH_KEY)
+        if username is not None and DB.check_permissions(username,0):
+            page_data = self._get_page_data(username)
+            return tmpl.render(page_data)
+        else:
+            raise Web.redirect(Pages.URL["auth"])
+    # Supervisor landing page
+    @cherrypy.expose
+    def super(self):
+        tmpl = Environment(loader=FileSystemLoader(".")).get_template(Pages.TEMPLATE["super"])
+        username = cherrypy.session.get(Session.AUTH_KEY)
+        if username is not None and DB.check_permissions(username,1):
+            page_data = self._get_page_data(username)
+            return tmpl.render(page_data)
+        else:
+            raise Web.redirect(Pages.URL["auth"])
     # Admin landing page (allows database modification)
     @cherrypy.expose
-    def admin(self, status=None, action=None, **kwargs):
+    def admin(self):
         tmpl = Environment(loader=FileSystemLoader(".")).get_template(Pages.TEMPLATE["admin"])
         username = cherrypy.session.get(Session.AUTH_KEY)
-        if username is not None:
-            if action is not None or action == "":
-                status = self._delegate_action(action, kwargs)
-                raise Web.redirect(Pages.URL["admin"] + "?status=%s" % status)
-            page_data = self._get_page_data(username,status)
+        if username is not None and DB.check_permissions(username,2):
+            page_data = self._get_page_data(username)
             return tmpl.render(page_data)
         else:
             raise Web.redirect(Pages.URL["auth"])
 
     """ Functional endpoints """
     # Login endpoint (checks POSTed credentials and then redirects)
+    # This page should send the current user to a landing page based on credentials
     @cherrypy.expose
     def login(self, username=None, password=None, **kwargs):
         if username is not None and password is not None:
-            # check that username is safe before doing anything with database
+            # escape username before changing database
             if Secure.credentials(username):
-                status = DB.authenticate_user(username,password,req_type=2)  # requires admin credentials
-                if status:
-                    cherrypy.session[Session.AUTH_KEY] = username
-                    raise Web.redirect(Pages.URL["admin"])
-                else:
-                    raise Web.redirect(Pages.URL["auth"])
+                # authenticate and redirect user given their credential type
+                user_type = DB.get_user_type(username)
+                if user_type >= 0 and user_type <= 2:
+                    status = DB.authenticate_user(username,password,req_type=user_type)
+                    print "here",status
+                    if status:
+                        cherrypy.session[Session.AUTH_KEY] = username
+                        if user_type == 0:  # user
+                            raise Web.redirect(Pages.URL["user"])
+                        elif user_type == 1:  # supervisor
+                            raise Web.redirect(Pages.URL["super"])
+                        elif user_type == 2:  # administrator
+                            raise Web.redirect(Pages.URL["admin"])
         cherrypy.session[Session.AUTH_KEY] = None
         raise Web.redirect(Pages.URL["auth"])
     # Logout endpoint (removes logged-in user session and redirects)
@@ -78,47 +110,13 @@ class Controller(object):
 
     """ Helper functions """
     # Return page_data dict to pass to Jinja template
-    def _get_page_data(self, username=None, status=None):
+    def _get_page_data(self, username=None):
         page_data = {
             "info": App.INFO
         }
         if username is not None:  # this means username exists and is valid
-            # TODO: fix this, it's really hacky:
-            drones_fields = DB.get_fields(DRONES)
-            types_fields = DB.get_fields(TYPES)
-            zones_fields = DB.get_fields(ZONES)
-            drones_fields = drones_fields[1:5]  # only display fields 1-5 to user
-            types_fields = types_fields[1:]  # skip UID field
-            zones_fields = zones_fields[1:]
             page_data["username"] = username
             page_data["nickname"] = DB.get_user_info("nickname",username)
             page_data["email"] = DB.get_user_info("email",username)
             page_data["phone"] = DB.get_user_info("phone",username)
-            page_data["uids"] = DB.get_values("uid",DRONES)  # send a list of drone UIDs for building our display grid
-            page_data["drones_fields"] = drones_fields
-            page_data["zones_fields"] = zones_fields
-            page_data["types_fields"] = types_fields
-            page_data["status"] = "" if status is None else status
         return page_data
-    # Delegate administrative database modifying actions
-    def _delegate_action(self, action, args):
-        if action == "new-drone":
-            uid = UID.generate("drone")
-            # TODO: add drone
-            return "Added new drone, {}.".format(uid)
-        elif action == "new-type":
-            uid = UID.generate("type")
-            # TODO: add type
-            return "Added new drone type, {}.".format(uid)
-        elif action == "new-zone":
-            uid = UID.generate("zone")
-            # TODO: add zone
-            return "Added new landing zone, {}.".format(uid)
-        elif action =="remove-uid":
-            for table in [DRONES,TYPES,ZONES]:
-                if DB.uid_exists(args["uid"],table):
-                    DB.delete(args["uid"],table)
-                    return "Removed UID {} from {}.".format(args["uid"],table)
-            return "UID not found. No action was taken."
-        else:
-            return ""

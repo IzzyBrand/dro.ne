@@ -18,8 +18,16 @@ class DBFunc:
     # Check if user exists in ADMIN table
     def _user_exists(self, username):
         r = self._query("SELECT username FROM user WHERE username=%s",(username,))
-        print r
+        #print r
         return len(r) is not 0
+
+    # Get user type (0 = user, 1 = supervisor, 2 = administrator)
+    # Return -1 if username does not exist
+    def get_user_type(self, username):
+        if self._user_exists(username):
+            return self.get_user_info("type",username)
+        else:
+            return -1
 
     # Check if user exists, and if so, compare the md5 hash
     # of the given password with given username. Additionally, the
@@ -29,8 +37,15 @@ class DBFunc:
     def authenticate_user(self, username, password, req_type=0):
         if self._user_exists(username):
             pwd_hash = self.get_user_info("password",username)
-            usr_type = self.get_user_info("type",username)
-            return (usr_type >= req_type) and (pwd_hash == Encoding.md5(password))
+            return self.check_permissions(username,req_type) and \
+                   pwd_hash == Encoding.md5(password)
+        return False
+
+    def check_permissions(self, username, req_type=0):
+        if self._user_exists(username):
+            user_type = self.get_user_type(username)
+            return user_type >= req_type
+        return False
 
     # Retrieve user specific data from ADMIN table
     def get_user_info(self, field, username):

@@ -42,11 +42,16 @@ class Pages:
     TEMPLATE = {
         "index": "view/page/index.html",
         "auth": "view/page/auth.html",
+        "user": "view/page/user.html",
+        "super": "view/page/super.html",
         "admin": "view/page/admin.html"
     }
     # URL to page
     URL = {
         "index": "/",
+        "auth": "/auth",
+        "user": "/user",
+        "super": "/super",
         "admin": "/admin"
     }
 
@@ -57,6 +62,10 @@ class Errors:
     GENERIC = {
         "general": "An error occurred",
         "no_data": "No data was received"
+    }
+    JOB = {
+        "no_queue": "Job failed to queue",
+        "duplicate": "Job with that UID already exists"
     }
     API = {
         "general": "An error occurred while contacting endpoint",
