@@ -19,28 +19,33 @@ class ServerInterface:
 			 "auth": self.auth,
 			 "state": json.dumps(state_json)
 		 }
-		try:
-		    response = requests.post(self.api_url, data=payload)
-		except requests.exceptions.RequestException as e:  # This is the correct syntax
-		    print e
-		    sys.exit(1)
-		return response
+		response = requests.post(self.api_url, data=payload)
+		if response.status_code - 200 < 10:
+			return response.text
+		else: 
+			print '[POST ERROR]: got status code', str(response.status_code)
+			return None
 
 	def get(self, subset=None):
 		if subset: payload = "uid={}&subset={}".format(self.uid, subset)
 		else: payload = "uid={}".format(self.uid)
-		return requests.get(self.api_url, params=payload)
+		response = requests.get(self.api_url, params=payload)
+		if response.status_code - 200 < 10:
+			return response.text
+		else: 
+			print '[GET ERROR]: got status code', str(response.status_code)
+			return None
 
 
 	# get a command from the server
 	def get_command(self):
-		response = self.get()
-		return json.loads(response.text)['command']
+		r = self.get()
+		return json.loads(r)['command']
 
 	# get the job json from the server (this has all the info about the mission)
 	def get_job(self):
-		response = self.get('job')
-		return json.loads(response.text)
+		r = self.get('job')
+		return json.loads(r)
 	
 	# send and error message to the server
 	def post_err_message(self, error):

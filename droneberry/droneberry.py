@@ -33,7 +33,6 @@ import sys
 
 
 class Drone:
-
 	_COMMAND_SET_MISSION 	= 'updatezone'
 	_COMMAND_TAKEOFF 		= 'takeoff'
 	_COMMAND_LAND 			= 'land'
