@@ -24,10 +24,17 @@ user front-end of the site.
 class Controller(object):
 
     """ Landing pages """
-    # Site index (shows login for admin page)
+    # Site index
     @cherrypy.expose
     def index(self):
         tmpl = Environment(loader=FileSystemLoader(".")).get_template(Pages.TEMPLATE["index"])
+        page_data = self._get_page_data()
+        return tmpl.render(page_data)
+
+    # Authorization page (login prompt)
+    @cherrypy.expose
+    def auth(self):
+        tmpl = Environment(loader=FileSystemLoader(".")).get_template(Pages.TEMPLATE["auth"])
         username = cherrypy.session.get(Session.AUTH_KEY)
         if username is not None:
             raise Web.redirect(Pages.URL["admin"])
@@ -46,7 +53,7 @@ class Controller(object):
             page_data = self._get_page_data(username,status)
             return tmpl.render(page_data)
         else:
-            raise Web.redirect(Pages.URL["index"])
+            raise Web.redirect(Pages.URL["auth"])
 
     """ Functional endpoints """
     # Login endpoint (checks POSTed credentials and then redirects)
@@ -60,9 +67,9 @@ class Controller(object):
                     cherrypy.session[Session.AUTH_KEY] = username
                     raise Web.redirect(Pages.URL["admin"])
                 else:
-                    raise Web.redirect(Pages.URL["index"])
+                    raise Web.redirect(Pages.URL["auth"])
         cherrypy.session[Session.AUTH_KEY] = None
-        raise Web.redirect(Pages.URL["index"])
+        raise Web.redirect(Pages.URL["auth"])
     # Logout endpoint (removes logged-in user session and redirects)
     @cherrypy.expose
     def logout(self):
