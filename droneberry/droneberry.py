@@ -22,21 +22,23 @@ FUNCTIONALITY BRAINSTORM
 import json
 import datetime
 import time
-from gripper import Gripper
-from gpiozero import Button
+# from gripper import Gripper
+# from gpiozero import Button
 from missionHandler import upload_and_verify
 from serverberry import ServerInterface
 from dronekit import connect, VehicleMode
 from pymavlink import mavutil
+import sys
+
 
 
 class Drone:
 
-	self._COMMAND_SET_MISSION 	= 'updatezone'
-	self._COMMAND_TAKEOFF 		= 'takeoff'
-	self._COMMAND_LAND 			= 'land'
-	self._COMMAND_PAUSE			= 'pause'
-	self._COMMAND_RTL 			= 'rtl'
+	_COMMAND_SET_MISSION 	= 'updatezone'
+	_COMMAND_TAKEOFF 		= 'takeoff'
+	_COMMAND_LAND 			= 'land'
+	_COMMAND_PAUSE			= 'pause'
+	_COMMAND_RTL 			= 'rtl'
 
 	def start(self):
 		self.server = ServerInterface()
@@ -47,10 +49,10 @@ class Drone:
 		self.current_action = ''
 		config_loaded = self._load_config() # load info about the uid and auth
 		online = True # TODO: verify internet connection
-		self.gripper = Gripper(18) # set up the gripper
-		self.button = Button(2)	   # set up the button
-		self.button.when_pressed   = self.gripper.open
-		self.button.when_released  = self.gripper.close
+		# self.gripper = Gripper(18) # set up the gripper
+		# self.button = Button(2)	   # set up the button
+		# self.button.when_pressed   = self.gripper.open
+		# self.button.when_released  = self.gripper.close
 
 		return config_loaded and online
 
@@ -65,7 +67,7 @@ class Drone:
 	def step(self):
 		# CHECK BATTERY VOLTAGE
 		self._read_from_pixhawk()
-		if self.state['voltage'] < voltage_emergency_threshold:
+		# if self.state['voltage'] < voltage_emergency_threshold:
 			# RTL
 
 		# SEND STATE UPDATE
@@ -75,31 +77,31 @@ class Drone:
 		received_command = self.server.get_command()
 
 		# ACT ON NEW COMMAND COMMAND
-		if received_command != self._prev_command:
+		if received_command != _prev_command:
 			self._log('NEW COMMAND - ' + received_command)
 
-			if received_command == self._COMMAND_RTL:
+			if received_command == _COMMAND_RTL:
 				if self.current_action == 'arm' or self.current_action == 'takeoff':
 					# disarm if we haven't taken off yet
 					self.current_action = 'disarm'
 				else: self.current_action = 'rtl'
 
-			elif received_command == self._COMMAND_PAUSE:
+			elif received_command == _COMMAND_PAUSE:
 				if self.current_action == 'arm' or self.current_action == 'takeoff':
 					# disarm if we haven't taken off yet
 					self.current_action = 'disarm'
 				else: self.current_action = 'pause'
 
-			elif received_command == self._COMMAND_TAKEOFF:
+			elif received_command == _COMMAND_TAKEOFF:
 				self.current_action = 'arm'
 
-			elif received_command == self._COMMAND_LAND:
-				if self.current_action = 'wait_landing':
+			elif received_command == _COMMAND_LAND:
+				if self.current_action == 'wait_landing':
 					self.pixhawk.commands.next += 1 # advance to the landing waypoint
 					self.current_action = 'landing'
 				else: self._log('WARNING - Cannot land while ' + self.current_action)
 
-			elif recieved_command == self._COMMAND_SET_MISSION:
+			elif recieved_command == _COMMAND_SET_MISSION:
 				self.current_action = 'upload_new_mission'
 
 			self._prev_command = received_command
@@ -122,33 +124,33 @@ class Drone:
 			self.pixhawk.simple_takeoff(20)
 			self.current_action = 'mission_start'
 
-		elif self.current_action == 'mission_start'
+		elif self.current_action == 'mission_start':
 			self.pixhawk.commands.next = 0	# start from the first waypoint
 			self.pixhawk.mode = VehicleMode('AUTO')
 			self.current_action = 'flying'
 
-		elif self.current_action = 'flying':
+		elif self.current_action == 'flying':
 			next_cmd = self.pixhawk.commands.next
 			# TODO - Determine if this should be mavutil.mavlink.MAV_CMD_NAV_LAND instead?
 			if self.pixhawk.commands[next_cmd].command == mavutil.mavlink.MAV_CMD_NAV_LOITER_UNLIM:
 				# we've reached the loiter waypoint
 				self.current_action = 'wait_landing'
 
-		elif self.current_action = 'landing' and not self.pixhawk.armed:
+		elif self.current_action == 'landing' and not self.pixhawk.armed:
 			self.gripper.open()
 			self.current_action = ''
 
-		elif self.current_action = 'pause':
+		elif self.current_action == 'pause':
 			self.pixhawk.mode = VehicleMode('LOITER')
 			self._log('LOITER')
 			self.current_action = ''
 
-		elif self.current_action = 'rtl':
+		elif self.current_action == 'rtl':
 			self.pixhawk.mode = VehicleMode('RTL')
 			self._log('RTL')
 			self.current_action = ''
 
-		elif self.current_action = 'upload_new_mission':
+		elif self.current_action == 'upload_new_mission':
 			if not self.pixhawk.armed:
 					wp_file = self.server.get_job()['wp_file']
 					wp_to_load = self.wp_path + '/' + wp_file + '.txt'
@@ -203,3 +205,13 @@ class Drone:
 		return self.state
 
 
+
+
+if __name__ == "__main__":
+    d = Drone()
+    d.start()
+    try:
+        while True: d.step()
+    except KeyboardInterrupt:
+        d.stop()
+        sys.exit()
