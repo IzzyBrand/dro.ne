@@ -2,6 +2,7 @@ import requests
 import json
 import hashlib
 import datetime
+import sys
 
 class ServerInterface:
 	# set the configuration
@@ -18,7 +19,11 @@ class ServerInterface:
 			 "auth": self.auth,
 			 "state": json.dumps(state_json)
 		 }
-		response = requests.post(self.api_url, data=payload)
+		try:
+		    response = requests.post(self.api_url, data=payload)
+		except requests.exceptions.RequestException as e:  # This is the correct syntax
+		    print e
+		    sys.exit(1)
 		return response
 
 	def get(self, subset=None):
@@ -43,7 +48,7 @@ class ServerInterface:
 			'err': error,
 			"timestamp": str(datetime.datetime.now())
 		}
-		post(payload_state)
+		self.post(payload_state)
 
 	# indicate that the drone is turning off by setting status to innactive
 	def disconnect(self):
@@ -51,5 +56,5 @@ class ServerInterface:
 			'status': 'inactive',
 			"timestamp": str(datetime.datetime.now())
 		}
-		post(payload_state)
+		self.post(payload_state)
 

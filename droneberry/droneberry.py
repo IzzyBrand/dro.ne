@@ -77,31 +77,31 @@ class Drone:
 		received_command = self.server.get_command()
 
 		# ACT ON NEW COMMAND COMMAND
-		if received_command != _prev_command:
+		if received_command != self._prev_command:
 			self._log('NEW COMMAND - ' + received_command)
 
-			if received_command == _COMMAND_RTL:
+			if received_command == self._COMMAND_RTL:
 				if self.current_action == 'arm' or self.current_action == 'takeoff':
 					# disarm if we haven't taken off yet
 					self.current_action = 'disarm'
 				else: self.current_action = 'rtl'
 
-			elif received_command == _COMMAND_PAUSE:
+			elif received_command == self._COMMAND_PAUSE:
 				if self.current_action == 'arm' or self.current_action == 'takeoff':
 					# disarm if we haven't taken off yet
 					self.current_action = 'disarm'
 				else: self.current_action = 'pause'
 
-			elif received_command == _COMMAND_TAKEOFF:
+			elif received_command == self._COMMAND_TAKEOFF:
 				self.current_action = 'arm'
 
-			elif received_command == _COMMAND_LAND:
+			elif received_command == self._COMMAND_LAND:
 				if self.current_action == 'wait_landing':
 					self.pixhawk.commands.next += 1 # advance to the landing waypoint
 					self.current_action = 'landing'
 				else: self._log('WARNING - Cannot land while ' + self.current_action)
 
-			elif recieved_command == _COMMAND_SET_MISSION:
+			elif received_command == self._COMMAND_SET_MISSION:
 				self.current_action = 'upload_new_mission'
 
 			self._prev_command = received_command
@@ -193,7 +193,7 @@ class Drone:
 	def _read_from_pixhawk(self):
 		# TODO: add timeout on this?
 		self.state = {
-			"status": self.status,
+			"status": self.current_action,
 			"timestamp": str(datetime.datetime.now()),
 			"latitude": self.pixhawk.location.global_relative_frame.lat,
 			"longitude": self.pixhawk.location.global_relative_frame.lon,
@@ -211,7 +211,9 @@ if __name__ == "__main__":
     d = Drone()
     d.start()
     try:
-        while True: d.step()
+        while True:
+        	d.step()
+        	time.sleep(1)
     except KeyboardInterrupt:
         d.stop()
         sys.exit()
