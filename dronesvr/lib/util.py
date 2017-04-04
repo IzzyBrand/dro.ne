@@ -104,10 +104,10 @@ class DBFunc:
 
     # Queue a new drone delivery job. Inputted parameter job must be a dict containing
     # all required values for the drone delivery (into MySQL table QUEUE).
-    def queue_job(self, job):
+    def add_job(self, job):
         keys = ",".join(job.keys())
         vals = "','".join(job.values())  # joins values with quotes (start & end don't have quotes)
-        sql = "INSERT INTO queue ({}) VALUES ('{}')".format(keys,vals)
+        sql = "INSERT INTO jobs ({}) VALUES ('{}')".format(keys,vals)
         return self._query(sql,return_data=False)
 
     ###############################
@@ -170,6 +170,8 @@ class UID:
             c = UIDConst.ZONE_ID
         elif uid_type == "type":
             c = UIDConst.TYPE_ID
+        elif uid_type == "job":
+            c = UIDConst.JOB_ID
         return c + randStr
 
 
