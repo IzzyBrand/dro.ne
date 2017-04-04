@@ -107,6 +107,28 @@ class Controller(object):
     def logout(self):
         cherrypy.session[Session.AUTH_KEY] = None
         raise Web.redirect(Pages.URL["index"])
+    # Add new delivery job
+    @cherrypy.expose
+    def addjob(self,flavor=None,destination=None):
+        username = cherrypy.session.get(Session.AUTH_KEY)
+        if DB.check_permissions(username,0) and \
+           flavor is not None and destination is not None:
+            # TODO: determine that flavor and destination 
+            # values are valid (match pre-existing values)
+            # Determine that user has not already queued a job
+            if True  #not DB._user_exists(username):  # TODO: function should check if username already exists in JOBS table
+                new_job = {
+                    "uid": UID.generate("job"),  # generate random job UID
+                    "username": username,
+                    "flavor": flavor,
+                    "destination": destination,
+                    "timestamp": Timestamp.now()
+                }
+                success = DB.add_job(new_job)
+                print "received",success
+            else:
+                print "Nope, you already queued a job!"
+        raise Web.redirect(Pages.URL["user"])
 
     """ Helper functions """
     # Return page_data dict to pass to Jinja template
