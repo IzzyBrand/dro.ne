@@ -54,17 +54,17 @@ def upload(vehicle, missionFile):
     Upload a mission from a file. 
     """
     #Read mission from file
-    missionlist = read(missionFile)
+    missionlist = read(vehicle, missionFile)
     
-    print "\nUpload mission from a file: %s" % import_mission_filename
+    print "\nUpload mission from a file: %s" % missionFile,
     #Clear existing mission from vehicle
-    print ' Clear mission'
+    print '\tClear mission',
     cmds = vehicle.commands
     cmds.clear()
     #Add new mission to vehicle
     for command in missionlist:
         cmds.add(command)
-    print ' Upload mission'
+    print '\tUpload mission'
     vehicle.commands.upload()
     return missionlist
 

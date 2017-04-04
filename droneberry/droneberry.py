@@ -41,8 +41,8 @@ class Drone:
 
 	def start(self):
 		self.server = ServerInterface()
-		self.pixhawk = connect('/dev/cu.usbmodem1', baud = 115200) # for on mac via USB
-		# self.pixhawk = connect('/dev/ttyS0', baud = 57600) # for on the raspberry PI via telem2
+		self.pixhawk = connect('/dev/cu.usbmodem1', baud = 115200, wait_ready=True) # for on mac via USB
+		# self.pixhawk = connect('/dev/ttyS0', baud = 57600, wait_ready=True) # for on the raspberry PI via telem2
 		self._log('Connected to pixhawk.')
 		self._prev_command = ''
 		self.current_action = ''
@@ -92,10 +92,11 @@ class Drone:
 				else: self.current_action = 'pause'
 
 			elif received_command == self._COMMAND_TAKEOFF:
-				self.current_action = 'arm'
+				if self.current_action == 'wait_arm': self.current_action = 'arm'
+				else: self._log('WARNING - Cannot arm without wait_arm')
 
 			elif received_command == self._COMMAND_LAND:
-				if self.current_action == 'wait_landing':
+				if self.current_action == 'wait_land':
 					self.pixhawk.commands.next += 1 # advance to the landing waypoint
 					self.current_action = 'landing'
 				else: self._log('WARNING - Cannot land while ' + self.current_action)
@@ -107,9 +108,12 @@ class Drone:
 
 		# ACT ON ONGOING COMMAND
 		# the self.current_action allows us to have ongoing instructions
-		if self.current_action == 'arm':
-			self.pixhawk.commands.wait_ready() # we can't fly until we have commands list
+		if self.current_action == 'prearm':
 			self.pixhawk.mode = VehicleMode('GUIDED') # we arm and takeoff in guided mode
+			self.pixhawk.commands.wait_ready() # we can't fly until we have commands list
+			self.current_action = 'wait_arm'
+
+		elif self.current_action == 'arm':
 			self.pixhawk.armed = True
 			self.current_action = 'takeoff'
 
@@ -133,7 +137,7 @@ class Drone:
 			# TODO - Determine if this should be mavutil.mavlink.MAV_CMD_NAV_LAND instead?
 			if self.pixhawk.commands[next_cmd].command == mavutil.mavlink.MAV_CMD_NAV_LOITER_UNLIM:
 				# we've reached the loiter waypoint
-				self.current_action = 'wait_landing'
+				self.current_action = 'wait_land'
 
 		elif self.current_action == 'landing' and not self.pixhawk.armed:
 			self.gripper.open()
@@ -153,7 +157,7 @@ class Drone:
 			if not self.pixhawk.armed:
 					wp_file = self.server.get_job()['wp_file']
 					wp_to_load = self.wp_path + '/' + wp_file + '.txt'
-					if upload_and_verify(self.pixhawk, wp_path + '/' + wp_file):
+					if upload_and_verify(self.pixhawk, self.wp_path + '/' + wp_file + '.txt'):
 						self.pixhawk.commands.download() # download the new commands
 						self.current_action = ''
 					else: 
@@ -215,4 +219,3 @@ if __name__ == "__main__":
         	time.sleep(1)
     except KeyboardInterrupt:
         d.stop()
-        sys.exit()

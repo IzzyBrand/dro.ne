@@ -4,5 +4,5 @@
 	"uid" : "dUID",
 	"auth" : "fd87dad2731a9a275c5f54f78f1f77d1",
 	"startup_status" : "initializing",
-	"wp_path" : "missions/"
+	"wp_path" : "missions"
 }
