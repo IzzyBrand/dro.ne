@@ -6,10 +6,9 @@ class Configuration:
     ERROR_LOG_PATH = "log/error.log"
     ACCESS_LOG_PATH = "log/access.log"
 
-
 class App:
     INFO = {
-        "name": "Air Control Server",
+        "name": "Fly2me",
         "version": "v1.0",
         "authors": "Benjamin Shanahan",
         "author_emails": "benjamin_shanahan@brown.edu",
@@ -28,7 +27,7 @@ class Database:
     ZONES_TABLE = "zones"
     TYPES_TABLE = "types"
     JOBS_TABLE = "jobs"
-    USERS_TABLE = "users"
+    USERS_TABLE = "user"
 
 class UIDConst:
     LENGTH = 7  # total length, NOT including hardcoded values below
@@ -42,11 +41,17 @@ class Pages:
     # Path to template file
     TEMPLATE = {
         "index": "view/page/index.html",
+        "auth": "view/page/auth.html",
+        "user": "view/page/user.html",
+        "super": "view/page/super.html",
         "admin": "view/page/admin.html"
     }
     # URL to page
     URL = {
         "index": "/",
+        "auth": "/auth",
+        "user": "/user",
+        "super": "/super",
         "admin": "/admin"
     }
 
@@ -57,6 +62,10 @@ class Errors:
     GENERIC = {
         "general": "An error occurred",
         "no_data": "No data was received"
+    }
+    JOB = {
+        "no_queue": "Job failed to queue",
+        "duplicate": "Job with that UID already exists"
     }
     API = {
         "general": "An error occurred while contacting endpoint",
