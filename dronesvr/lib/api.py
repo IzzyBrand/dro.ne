@@ -57,12 +57,9 @@ class API(object):
                 job_uid = DB.get("job",DRONES,uid)
                 return {
                     "uid": DB.get("uid",JOBS,job_uid),
-                    "pickupzone": DB.get("pickupzone",JOBS,job_uid),
-                    "dropoffzone": DB.get("dropoffzone",JOBS,job_uid),
-                    "wp_file": DB.get("wp_file",JOBS,job_uid),
-                    "sender": DB.get("sender",JOBS,job_uid),
-                    "receiver": DB.get("receiver",JOBS,job_uid),
-                    "desired_pickup_time": DB.get("desired_pickup_time",JOBS,job_uid),
+                    "username": DB.get("username",JOBS,job_uid),
+                    "destination": DB.get("destination",JOBS,job_uid),
+                    "flavor": DB.get("flavor",JOBS,job_uid),
                     "timestamp": DB.get("timestamp",JOBS,job_uid)
                 }
 

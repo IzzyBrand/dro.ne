@@ -116,7 +116,7 @@ class Controller(object):
             # TODO: determine that flavor and destination 
             # values are valid (match pre-existing values)
             # Determine that user has not already queued a job
-            if True:  #not DB._user_exists(username):  # TODO: function should check if username already exists in JOBS table
+            if DB.user_can_queue(username):  # make sure user can queue a job!
                 new_job = {
                     "uid": UID.generate("job"),  # generate random job UID
                     "username": username,
@@ -127,7 +127,7 @@ class Controller(object):
                 success = DB.add_job(new_job)
                 print "received",success
             else:
-                print "Nope, you already queued a job!"
+                print "Nope, you either have a job queued or already got a donut!"
         raise Web.redirect(Pages.URL["user"])
 
     """ Helper functions """
