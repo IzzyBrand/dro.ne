@@ -45,6 +45,8 @@ class Drone:
 	def start(self):
 		self.server = ServerInterface()
 		self.pixhawk = connect('/dev/cu.usbmodem1', baud = 115200, wait_ready=True) # for on mac via USB
+		# self.pixhawk = connect('/dev/tty.usbserial-DA00BL49', baud = 57600)
+		# self.pixhawk.wait_ready(timeout=60)
 		# self.pixhawk = connect('/dev/ttyS0', baud = 57600, wait_ready=True) # for on the raspberry PI via telem2
 		self._log('Connected to pixhawk.')
 		self._prev_command = ''
@@ -105,7 +107,7 @@ class Drone:
 					self.pixhawk.commands.download()
 					self.current_action = 'idle'
 
-			elif recieved_command == self._COMMAND_SHUTDOWN:
+			elif received_command == self._COMMAND_SHUTDOWN:
 				if not self.pixhawk.armed:
 					self.stop()
 					# os.system("sudo shutdown -h now")
