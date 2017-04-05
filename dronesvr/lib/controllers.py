@@ -116,7 +116,7 @@ class Controller(object):
             # TODO: determine that flavor and destination 
             # values are valid (match pre-existing values)
             # Determine that user has not already queued a job
-            if True  #not DB._user_exists(username):  # TODO: function should check if username already exists in JOBS table
+            if True:  #not DB._user_exists(username):  # TODO: function should check if username already exists in JOBS table
                 new_job = {
                     "uid": UID.generate("job"),  # generate random job UID
                     "username": username,
