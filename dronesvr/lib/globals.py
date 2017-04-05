@@ -10,11 +10,11 @@ class App:
     INFO = {
         "name": "Fly2me",
         "version": "v1.0",
-        "authors": "Benjamin Shanahan",
-        "author_emails": "benjamin_shanahan@brown.edu",
-        "full_url": "",
-        "short_url": "",
-        "description": "Air control server for real-time drone management",
+        "authors": "Benjamin Shanahan, Izzy Brand",
+        "author_emails": "benjamin_shanahan@brown.edu, brand@brown.edu",
+        "full_url": "http://fly2me.bshanahan.info/",
+        "short_url": "fly2me.bshanahan.info",
+        "description": "Fly2me Autonomous Drone Delivery",
         "long_description": """long description here"""
     }
 
