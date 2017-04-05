@@ -100,7 +100,7 @@ class Drone:
 				self.flow_action('pause')
 			elif received_command == self._COMMAND_SET_MISSION:
 				if not self.pixhawk.armed:
-					wp_file = self.server.get_job()['wp_file']
+					wp_file = self.server.get_job()['destination']
 					wp_to_load = self.wp_path + '/' + wp_file + '.txt'
 					# TODO: figure out how to error check command upload
 					upload(self.pixhawk, self.wp_path + '/' + wp_file + '.txt')

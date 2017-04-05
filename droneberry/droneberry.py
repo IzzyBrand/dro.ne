@@ -26,7 +26,7 @@ import time
 # from gpiozero import Button
 from missionHandler import upload
 from serverberry import ServerInterface
-from dronekit import connect, VehicleMode
+from dronekit import connect, VehicleMode, APIException
 from pymavlink import mavutil
 import sys
 import os
@@ -46,18 +46,21 @@ class Drone:
 		self.server = ServerInterface()
 		self.pixhawk = connect('/dev/cu.usbmodem1', baud = 115200, wait_ready=True) # for on mac via USB
 		# self.pixhawk = connect('/dev/tty.usbserial-DA00BL49', baud = 57600)
-		# self.pixhawk.wait_ready(timeout=60)
+		# self.pixhawk = connect('/dev/tty.SLAB_USBtoUART', baud = 57600)	
+		self.pixhawk.wait_ready(timeout=60)
+		self.pixhawk.commands.download()
 		# self.pixhawk = connect('/dev/ttyS0', baud = 57600, wait_ready=True) # for on the raspberry PI via telem2
 		self._log('Connected to pixhawk.')
+		self._prev_pixhawk_mode = ''
 		self._prev_command = ''
 		self._arming_window_start = 0
 		self.current_action = 'idle'
 		config_loaded = self._load_config() # load info about the uid and auth
 		online = True # TODO: verify internet connection
-		self.gripper = Gripper(18) # set up the gripper
-		self.button = Button(2)	   # set up the button
-		self.button.when_pressed   = self.gripper.open
-		self.button.when_released  = self.gripper.close
+		# self.gripper = Gripper(18) # set up the gripper
+		# self.button = Button(2)	   # set up the button
+		# self.button.when_pressed   = self.gripper.open
+		# self.button.when_released  = self.gripper.close
 
 		return config_loaded and online
 
@@ -70,8 +73,9 @@ class Drone:
 	# STEP
 	#################################################################################
 	def step(self):
-		# CHECK BATTERY VOLTAGE
+		# UPDATE PIXHAWK INFORMATION
 		self._read_from_pixhawk()
+		self.print_mode_change()
 		# if self.state['voltage'] < voltage_emergency_threshold:
 			# RTL
 
@@ -100,7 +104,7 @@ class Drone:
 				self.flow_action('pause')
 			elif received_command == self._COMMAND_SET_MISSION:
 				if not self.pixhawk.armed:
-					wp_file = self.server.get_job()['wp_file']
+					wp_file = self.server.get_job()['destination']
 					wp_to_load = self.wp_path + '/' + wp_file + '.txt'
 					# TODO: figure out how to error check command upload
 					upload(self.pixhawk, self.wp_path + '/' + wp_file + '.txt')
@@ -119,9 +123,13 @@ class Drone:
 		# the self.current_action allows us to have ongoing instructions
 		if self.current_action == 'prearm':
 			self.pixhawk.mode = VehicleMode('GUIDED') # we arm and takeoff in guided mode
-			self.pixhawk.commands.wait_ready() # we can't fly until we have commands list
-			self._arming_window_start = time.time()
-			self.set_action('wait_arm')
+			try:
+				self.pixhawk.commands.wait_ready() # we can't fly until we have commands list
+				self._arming_window_start = time.time()
+				self.set_action('wait_arm')
+			except APIException:
+				print 'commands still downloading.'
+				self.set_action('idle')
 
 		elif self.current_action == 'wait_arm' and time.time() - self._arming_window_start > 60:
 			self._log('TIMEOUT - revert to idle')
@@ -144,6 +152,7 @@ class Drone:
 
 		elif self.current_action == 'flying':
 			next_cmd = self.pixhawk.commands.next
+			print next_cmd, self.pixhawk.commands[next_cmd].command
 			# TODO - Determine if this should be mavutil.mavlink.MAV_CMD_NAV_LAND instead?
 			if self.pixhawk.commands[next_cmd].command == mavutil.mavlink.MAV_CMD_NAV_LOITER_UNLIM:
 				# we've reached the loiter waypoint
@@ -151,7 +160,7 @@ class Drone:
 
 		elif self.current_action == 'landing' and not self.pixhawk.armed:
 			# we were landing and now we're disarmed, so we must have landed
-			self.gripper.open()
+			# self.gripper.open()
 			self.set_action('idle')
 
 		elif self.current_action == 'disarm': 
@@ -168,6 +177,10 @@ class Drone:
 			self.pixhawk.mode = VehicleMode('RTL')
 			self.set_action('rtl')
 
+		elif (self.current_action == 'rtl' or self.current_action == 'loiter') \
+		and not self.pixhawk.armed:
+			self._log('Detected disarm while ' + self.current_action + '. Changing to idle.')
+			self.set_action('idle')
 
 	#################################################################################
 	# STATE FLOW LOGIC
@@ -252,6 +265,10 @@ class Drone:
 		}
 		return self.state
 
+	def print_mode_change(self):
+		if self.pixhawk.mode.name != self._prev_pixhawk_mode:
+			print 'MODE CHANGED TO', self.pixhawk.mode.name
+			self._prev_pixhawk_mode = self.pixhawk.mode.name
 
 if __name__ == "__main__":
     d = Drone()
