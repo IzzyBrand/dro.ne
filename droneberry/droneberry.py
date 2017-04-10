@@ -22,8 +22,8 @@ FUNCTIONALITY BRAINSTORM
 import json
 import datetime
 import time
-# from gripper import Gripper
-# from gpiozero import Button
+from gripper import Gripper
+from gpiozero import Button
 from missionHandler import upload
 from serverberry import ServerInterface
 from dronekit import connect, VehicleMode, APIException
@@ -44,12 +44,12 @@ class Drone:
 
 	def start(self):
 		self.server = ServerInterface()
-		self.pixhawk = connect('/dev/cu.usbmodem1', baud = 115200, wait_ready=True) # for on mac via USB
+		# self.pixhawk = connect('/dev/ttyAMA0', baud = 115200, wait_ready=True) # for on mac via USB
 		# self.pixhawk = connect('/dev/tty.usbserial-DA00BL49', baud = 57600)
+		self.pixhawk = connect('/dev/ttyS0', baud = 57600, wait_ready=True) # for on the raspberry PI via telem2
 		# self.pixhawk = connect('/dev/tty.SLAB_USBtoUART', baud = 57600)	
 		self.pixhawk.wait_ready(timeout=60)
 		self.pixhawk.commands.download()
-		# self.pixhawk = connect('/dev/ttyS0', baud = 57600, wait_ready=True) # for on the raspberry PI via telem2
 		self._log('Connected to pixhawk.')
 		self._prev_pixhawk_mode = ''
 		self._prev_command = ''
@@ -57,10 +57,10 @@ class Drone:
 		self.current_action = 'idle'
 		config_loaded = self._load_config() # load info about the uid and auth
 		online = True # TODO: verify internet connection
-		# self.gripper = Gripper(18) # set up the gripper
-		# self.button = Button(2)	   # set up the button
-		# self.button.when_pressed   = self.gripper.open
-		# self.button.when_released  = self.gripper.close
+		self.gripper = Gripper(18) # set up the gripper
+		self.button = Button(2)	   # set up the button
+		self.button.when_pressed   = self.gripper.open
+		self.button.when_released  = self.gripper.close
 
 		return config_loaded and online
 
