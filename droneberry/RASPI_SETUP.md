@@ -11,8 +11,8 @@
 
 ## MacOS
 ```
-sudo apt-get udate
+sudo apt-get update
 sudo apt-get upgrade
-sudo apt-get install vim python-pip
-sudo pip install mavproxy dronekit pyserial pymavlink 
+sudo apt-get install vim python-pip python-dev libxml2-dev libxslt-dev
+sudo pip install monotonic future mavproxy dronekit pyserial pymavlink 
 ```
