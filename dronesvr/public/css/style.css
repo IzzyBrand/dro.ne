@@ -2,8 +2,14 @@ body {
     font-family: 'Nunito', sans-serif;
 }
 
+/*Active navigation links*/
+.active {
+    font-weight: bold;
+}
+
 .credit {
-    color: #000;
+    color: #999;
+    font-size: 8pt;
 }
 .login {
     padding-bottom: 5px;
@@ -14,8 +20,8 @@ body {
     font-size: 20pt;
 }
 .page-title {
-    font-style: italic;
-    font-size: 15pt;
+    /*font-style: italic;*/
+    font-size: 16pt;
 }
 
 .status {

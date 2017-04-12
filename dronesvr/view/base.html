@@ -1,3 +1,14 @@
+{% macro generate_nav() %}
+    {% set active_page = active_page|default("index") -%}
+    <a href="/" {% if active_page=="index" %}class="active"{% endif %}>Map</a> |
+    <a href="/about" {% if active_page=="about" %}class="active"{% endif %}>About</a> | 
+    {% if username %}
+        <a href="/logout">Sign Out</a>
+    {% else %}
+        <a href="/auth" {% if active_page=="auth" %}class="active"{% endif %}>Sign In</a>
+    {% endif %}
+{% endmacro %}
+
 <!DOCTYPE html>
 
 <html>
@@ -19,11 +30,20 @@
 </head>
 <body>
 
+{% if raw %}
+
+{% block raw %}{% endblock %}
+
+{% else %}
+
 <div class="container">
 
     <div class="page-header">
-        <div class="site-title">{{info["name"]}}</div>
+        <!-- <div class="site-title">{{info["name"]}}</div> -->
         {% block header %}{% endblock %}
+        <div class="navigation">
+            {{ generate_nav() }}
+        </div>
     </div>
 
     <div class="page-header">
@@ -34,12 +54,11 @@
 
 <div class="footer">
     <div class="container">
-        <p class="muted credit"><a href="index">{{info["name"]}}</a> {{info["version"]}} - Copyright &copy; 2017 {{info["authors"]}}</p>
+        <p class="muted credit"><span style="font-style:italic"><a href="/">{{info["name"]}}</a></span> {{info["version"]}} - Copyright &copy; 2017 {{info["authors"]}}</p>
     </div>
 </div>
 
-
-</div>
+{% endif %}
 
 <link href="https://fonts.googleapis.com/css?family=Nunito" rel="stylesheet">
 <link href="/static/css/jquery-ui.min.css" rel="stylesheet">

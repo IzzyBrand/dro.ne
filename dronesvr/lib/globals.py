@@ -8,13 +8,13 @@ class Configuration:
 
 class App:
     INFO = {
-        "name": "Fly2me",
+        "name": "LunaDrop",
         "version": "v1.0",
         "authors": "Benjamin Shanahan, Izzy Brand",
         "author_emails": "benjamin_shanahan@brown.edu, brand@brown.edu",
-        "full_url": "http://fly2me.bshanahan.info/",
-        "short_url": "fly2me.bshanahan.info",
-        "description": "Fly2me Autonomous Drone Delivery",
+        "full_url": "http://lunadrop.com/",
+        "short_url": "lunadrop.com",
+        "description": "LunaDrop Autonomous Delivery",
         "long_description": """long description here"""
     }
 
@@ -41,16 +41,16 @@ class Pages:
     # Path to template file
     TEMPLATE = {
         "index": "view/page/index.html",
+        "about": "view/page/about.html",
         "auth": "view/page/auth.html",
-        "user": "view/page/user.html",
         "super": "view/page/super.html",
         "admin": "view/page/admin.html"
     }
     # URL to page
     URL = {
         "index": "/",
+        "about": "/about",
         "auth": "/auth",
-        "user": "/user",
         "super": "/super",
         "admin": "/admin"
     }
