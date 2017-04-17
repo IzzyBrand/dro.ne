@@ -28,6 +28,14 @@ class Controller(object):
     @cherrypy.expose
     def index(self):
         tmpl = Environment(loader=FileSystemLoader(".")).get_template(Pages.TEMPLATE["index"])
+        username = cherrypy.session.get(Session.AUTH_KEY)
+        page_data = self._get_page_data()
+        return tmpl.render(page_data)
+    # About page
+    @cherrypy.expose
+    def about(self):
+        tmpl = Environment(loader=FileSystemLoader(".")).get_template(Pages.TEMPLATE["about"])
+        username = cherrypy.session.get(Session.AUTH_KEY)
         page_data = self._get_page_data()
         return tmpl.render(page_data)
     # Authorization page (login prompt)
@@ -37,7 +45,7 @@ class Controller(object):
         username = cherrypy.session.get(Session.AUTH_KEY)
         if username is not None:
             if DB.check_permissions(username,0):
-                raise Web.redirect(Pages.URL["user"])
+                raise Web.redirect(Pages.URL["index"])
             elif DB.check_permissions(username,1):
                 raise Web.redirect(Pages.URL["super"])
             elif DB.check_permissions(username,2):
@@ -48,23 +56,13 @@ class Controller(object):
         else:
             page_data = self._get_page_data()
             return tmpl.render(page_data)
-    # User landing page
-    @cherrypy.expose
-    def user(self):
-        tmpl = Environment(loader=FileSystemLoader(".")).get_template(Pages.TEMPLATE["user"])
-        username = cherrypy.session.get(Session.AUTH_KEY)
-        if username is not None and DB.check_permissions(username,0):
-            page_data = self._get_page_data(username)
-            return tmpl.render(page_data)
-        else:
-            raise Web.redirect(Pages.URL["auth"])
     # Supervisor landing page
     @cherrypy.expose
     def super(self):
         tmpl = Environment(loader=FileSystemLoader(".")).get_template(Pages.TEMPLATE["super"])
         username = cherrypy.session.get(Session.AUTH_KEY)
         if username is not None and DB.check_permissions(username,1):
-            page_data = self._get_page_data(username)
+            page_data = self._get_page_data()
             return tmpl.render(page_data)
         else:
             raise Web.redirect(Pages.URL["auth"])
@@ -74,7 +72,7 @@ class Controller(object):
         tmpl = Environment(loader=FileSystemLoader(".")).get_template(Pages.TEMPLATE["admin"])
         username = cherrypy.session.get(Session.AUTH_KEY)
         if username is not None and DB.check_permissions(username,2):
-            page_data = self._get_page_data(username)
+            page_data = self._get_page_data()
             return tmpl.render(page_data)
         else:
             raise Web.redirect(Pages.URL["auth"])
@@ -95,7 +93,7 @@ class Controller(object):
                     if status:
                         cherrypy.session[Session.AUTH_KEY] = username
                         if user_type == 0:  # user
-                            raise Web.redirect(Pages.URL["user"])
+                            raise Web.redirect(Pages.URL["index"])
                         elif user_type == 1:  # supervisor
                             raise Web.redirect(Pages.URL["super"])
                         elif user_type == 2:  # administrator
@@ -132,7 +130,8 @@ class Controller(object):
 
     """ Helper functions """
     # Return page_data dict to pass to Jinja template
-    def _get_page_data(self, username=None):
+    def _get_page_data(self):
+        username = cherrypy.session.get(Session.AUTH_KEY)
         page_data = {
             "info": App.INFO
         }
