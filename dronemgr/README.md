@@ -2,5 +2,8 @@
 
 Back-end, realtime, drone management and delegation system.
 
-## To start the manager:
+## To boot the manager (root):
     $ sh boot
+
+## To shut down the manager (root):
+    $ sh shutdown
