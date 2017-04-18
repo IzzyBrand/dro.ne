@@ -5,6 +5,7 @@ class Configuration:
     THREAD_POOL = 12
     ERROR_LOG_PATH = "log/error.log"
     ACCESS_LOG_PATH = "log/access.log"
+    SERVER_PID_PATH = "log/pid.log"
 
 class App:
     INFO = {
@@ -19,10 +20,6 @@ class App:
     }
 
 class Database:
-    HOST = "localhost"
-    USER = "root"
-    PASSWORD_ENV_VAR = "DRONE_DB_PWD"  # name of environmental variable
-    DATABASE_NAME = "dronedb"
     DRONES_TABLE = "drones"
     ZONES_TABLE = "zones"
     TYPES_TABLE = "types"

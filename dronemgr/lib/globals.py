@@ -1,8 +1,7 @@
-class Database:
-    HOST = "localhost"
-    USER = "root"
-    PWD_ENV_VAR = "DRONE_DB_PWD"  # environ variable
-    DB_NAME = "dronedb"
+""" Drone manager configuration constants """
+class Configuration:
+    SERVER_PID_PATH = "log/pid.log"
+    DB_AUTH_PATH = "config/db.keys"
 
 
 """ General timing constants """

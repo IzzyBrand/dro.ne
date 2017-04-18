@@ -68,11 +68,9 @@ class Get:
         job_uid = self.db.get(uid,"job","drones")
         return {
             "uid": self.db.get(job_uid,"uid","jobs"),
-            "pickupzone": self.db.get(job_uid,"pickupzone","jobs"),
-            "dropoffzone": self.db.get(job_uid,"dropoffzone","jobs"),
-            "sender": self.db.get(job_uid,"sender","jobs"),
-            "receiver": self.db.get(job_uid,"receiver","jobs"),
-            "desired_pickup_time": self.db.get(job_uid,"desired_pickup_time","jobs"),
+            "username": self.db.get(job_uid,"username","jobs"),
+            "flavor": self.db.get(job_uid,"flavor","jobs"),
+            "destination": self.db.get(job_uid,"destination","jobs"),
             "timestamp": self.db.get(job_uid,"timestamp","jobs")
         }
 

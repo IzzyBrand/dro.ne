@@ -1,6 +1,6 @@
 from lib.util import Status, DBFunc
 from lib.controllers import Controller
-from lib.globals import Timing
+from lib.globals import Timing, Configuration
 
 import os
 import time
@@ -42,6 +42,20 @@ class Manager:
             time.sleep(Timing.UPDATE_INTERVAL)
 
 
+def print_pid(path):
+    pid = os.getpid()
+    try:
+        pidfile = open(path,"wb")
+        output = "dronesvrpid='" + str(pid) + "'"
+        pidfile.write(output)  # write PID to text file
+    finally:
+        try:
+            pidfile.close()
+        except:
+            pass
+
+
 if __name__ == "__main__":
+    print_pid(Configuration.SERVER_PID_PATH)
     mgr = Manager()
     mgr.start()

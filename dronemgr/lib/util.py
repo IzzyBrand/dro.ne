@@ -1,19 +1,22 @@
-from . globals import Database
+from . globals import Configuration
 
 import MySQLdb
 import time
 import os
+import ConfigParser
 
 
 """ Database management functions """
 class DBFunc:
 
     def __init__(self):
+        cfg = ConfigParser.ConfigParser()
+        cfg.read(Configuration.DB_AUTH_PATH)  # parse .keys file in config/ dir
         self.db = MySQLdb.connect(
-            Database.HOST,
-            Database.USER,
-            os.environ[Database.PWD_ENV_VAR],
-            Database.DB_NAME)
+            cfg.get("Database","host"), 
+            cfg.get("Database","user"), 
+            cfg.get("Database","password"),
+            cfg.get("Database","database"))
 
     ################################
     ### Data retrieval functions ###

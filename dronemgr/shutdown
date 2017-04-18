@@ -1,0 +1,4 @@
+# Shutdown Drone Manager
+. log/pid.log  # load PID from log file
+sudo kill -9 $dronemgrpid
+echo "Drone Manager shut down."
