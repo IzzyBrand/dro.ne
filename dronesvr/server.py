@@ -2,6 +2,7 @@ from lib.controllers import Controller
 from lib.api import API
 from lib.globals import Configuration, Database
 
+import ConfigParser
 import os
 import MySQLdb
 import cherrypy
@@ -25,11 +26,13 @@ def get_app(conf):
     return cherrypy.tree
 
 def new_thread(thread_index):
+    cfg = ConfigParser.ConfigParser()
+    cfg.read("config/db.keys")  # parse .keys file in config/ dir
     cherrypy.thread_data.db = MySQLdb.connect(
-        Database.HOST, 
-        Database.USER, 
-        os.environ[Database.PASSWORD_ENV_VAR],
-        Database.DATABASE_NAME)
+        cfg.get("Database","host"), 
+        cfg.get("Database","user"), 
+        cfg.get("Database","password"),
+        cfg.get("Database","database"))
 
 def secure_headers():
     headers = cherrypy.response.headers
@@ -45,7 +48,20 @@ def start():
     cherrypy.engine.start()
     cherrypy.engine.block()
 
+def print_pid(path):
+    pid = os.getpid()
+    try:
+        pidfile = open(path,"wb")
+        output = "dronesvrpid='" + str(pid) + "'"
+        pidfile.write(output)  # write PID to text file
+    finally:
+        try:
+            pidfile.close()
+        except:
+            pass
+
 
 
 if __name__ == "__main__":
+    print_pid(Configuration.SERVER_PID_PATH)  # save Python PID
     start()
