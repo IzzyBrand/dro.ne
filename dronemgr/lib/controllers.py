@@ -18,6 +18,26 @@ class Controller:
 
     # Run the following at each processing iteration (step)
     def step(self):
+        """
+        1. Get updated drone statuses from DB
+        2. Get updated user inputs from DB
+        3. Respond to user inputs
+            - rtl               -> command rtl
+            - pause             -> command pause
+            - resume            -> command resume
+            - approve takeoff   -> command takeoff
+            - approve land      -> command land
+
+        4. Respond to updated status for each drone
+            - idle          
+                if no task:    dequeue task and delegate
+                if task:       command updatezone (only do this once. maybe check drone's mission matches desired mission?)
+
+            - wait_land     -> command land if user click
+            - wait_arm      -> command takeoff if user click
+            - land          -> update current wp_file in task to next in mission, or end task if last wp_file
+
+        """
         for uid in self.drone_uids:
             # Drone info
             name = self.get.general(uid)["name"]
@@ -29,6 +49,7 @@ class Controller:
             self.set.status(uid,random.choice([
                 "idle","takeoff","rtl","pause","landing"
             ]))
+
 
 
 """ Get information from database """

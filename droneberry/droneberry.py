@@ -44,7 +44,7 @@ class Drone:
 
 	def start(self):
 		self.server = ServerInterface()
-		# self.pixhawk = connect('/dev/ttyAMA0', baud = 115200, wait_ready=True) # for on mac via USB
+		# self.pixhawk = connect('/dev/cu.usbmodem1', baud = 115200, wait_ready=True) # for on mac via USB
 		# self.pixhawk = connect('/dev/tty.usbserial-DA00BL49', baud = 57600)
 		self.pixhawk = connect('/dev/ttyS0', baud = 57600, wait_ready=True) # for on the raspberry PI via telem2
 		# self.pixhawk = connect('/dev/tty.SLAB_USBtoUART', baud = 57600)	
