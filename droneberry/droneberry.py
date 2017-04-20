@@ -111,11 +111,12 @@ class Drone:
 			elif received_command == self._COMMAND_SET_MISSION:
 				if not self.pixhawk.armed:
 					wp_file = self.server.get_job()['destination']
-					wp_to_load = self.wp_path + '/' + wp_file + '.txt'
-					# TODO: figure out how to error check command upload
-					upload(self.pixhawk, self.wp_path + '/' + wp_file + '.txt')
-					self.pixhawk.commands.download()
-					self.set_action('idle')
+					if wp_file != None:
+						wp_to_load = self.wp_path + '/' + wp_file + '.txt'
+						# TODO: figure out how to error check command upload
+						upload(self.pixhawk, self.wp_path + '/' + wp_file + '.txt')
+						self.pixhawk.commands.download()
+						self.set_action('idle')
 
 			elif received_command == self._COMMAND_SHUTDOWN:
 				if not self.pixhawk.armed:
