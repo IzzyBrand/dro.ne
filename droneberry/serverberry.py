@@ -29,23 +29,29 @@ class ServerInterface:
 	def get(self, subset=None):
 		if subset: payload = "uid={}&subset={}".format(self.uid, subset)
 		else: payload = "uid={}".format(self.uid)
-		response = requests.get(self.api_url, params=payload)
-		if response.status_code - 200 < 10:
-			return response.text
-		else: 
-			print '[GET ERROR]: got status code', str(response.status_code)
+		try:
+			response = requests.get(self.api_url, params=payload)
+			if response.status_code - 200 < 10:
+				return response.text
+			else: 
+				print '[GET ERROR]: got status code', str(response.status_code)
+				return None
+		except requests.exceptions.ConnectionError as e:
+			print '[GET ERROR]:', e.message
 			return None
 
 
 	# get a command from the server
 	def get_command(self):
 		r = self.get()
-		return json.loads(r)['command']
+		if r == None: return None
+		else: return json.loads(r)['command']
 
 	# get the job json from the server (this has all the info about the mission)
 	def get_job(self):
 		r = self.get('job')
-		return json.loads(r)
+		if r == None: return None
+		else: return json.loads(r)
 	
 	# send and error message to the server
 	def post_err_message(self, error):
