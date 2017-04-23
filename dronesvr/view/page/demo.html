@@ -1,0 +1,74 @@
+{% extends "view/base.html" %}
+{% set active_page = "demo" %}
+
+
+{% block content %}
+
+<script src="/static/js/demo.js"></script>
+
+<h3>LunaDrop Demo WebApp</h3>
+<p>Back to <a href="/admin">admin</a> page.</p>
+
+<div class="container box" onclick="updateCommand()">
+
+    <div class="row">
+        <div class="col col-sm-6">
+            <label for="current-command">Current Command (<em>click to refresh</em>):</label> 
+        </div>
+        <div class="col col-sm-6">
+            <span id="current-command">Database offline.</span>
+        </div>
+    </div>
+
+</div>
+
+<br>
+
+<div class="container box">
+
+    <br>
+
+    <!-- Arm/disarm -->
+    <div class="row">
+        <div class="col col-sm-6">
+            <label for="arm-switch">Status</label>
+        </div>
+        <div class="col col-sm-6">
+            <input id="arm-switch" data-toggle="toggle" data-on="Armed" data-off="Disarmed" data-height="40px" data-width="90%" type="checkbox" onclick="armHandler()">
+        </div>
+    </div>
+    <div class="row"><br></div>
+
+    <!-- Spin up/down motors -->
+    <div class="row">
+        <div class="col col-sm-6">
+            <label for="motor-switch">Motors</label>
+        </div>
+        <div class="col col-sm-6">
+            <input id="motor-switch" data-toggle="toggle" data-on="On" data-off="Off" data-height="40px" data-width="90%" type="checkbox">
+        </div>
+    </div>
+    <div class="row"><br></div>
+
+    <!-- Open/close gripper -->
+    <div class="row">
+        <div class="col col-sm-6">
+            <label for="gripper-switch">Gripper</label>
+        </div>
+        <div class="col col-sm-6">
+            <input id="gripper-switch" data-toggle="toggle" data-on="Close" data-off="Open" data-height="40px" data-width="90%" type="checkbox">
+        </div>
+    </div>
+    <div class="row"><br></div>
+
+</div>
+
+<style type="text/css">
+.box {
+    text-align: center;
+    border: solid 1px #333333;
+    border-radius: 5px;
+}
+</style>
+
+{% endblock %}
