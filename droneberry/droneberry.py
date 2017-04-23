@@ -24,8 +24,8 @@ FUNCTIONALITY BRAINSTORM
 import json
 import datetime
 import time
-# from gripper import Gripper
-# from gpiozero import Button
+from gripper import Gripper
+from gpiozero import Button
 from missionHandler import upload
 from serverberry import ServerInterface
 from dronekit import connect, VehicleMode, APIException
@@ -47,11 +47,11 @@ class Drone:
 	def start(self):
 		self.server = ServerInterface()
 		# self.pixhawk = connect('/dev/cu.usbmodem1', baud = 115200, wait_ready=True) 	# for on mac via USB
-		# # self.pixhawk = connect('/dev/ttyS0', baud = 57600, wait_ready=True) 			# for on the raspberry PI via telem2
+		self.pixhawk = connect('/dev/ttyS0', baud = 57600, wait_ready=True) 			# for on the raspberry PI via telem2
 		# # self.pixhawk = connect('/dev/tty.usbserial-DA00BL49', baud = 57600)			# telem radio on mac
 		# # self.pixhawk = connect('/dev/tty.SLAB_USBtoUART', baud = 57600)				# telem radio on mac
-		# self.pixhawk.wait_ready(timeout=60)
-		# self.pixhawk.commands.download()
+		#self.pixhawk.wait_ready(timeout=60)
+		#self.pixhawk.commands.download()
 		self._log('Connected to pixhawk.')
 		self._prev_pixhawk_mode = ''
 		self._prev_command = ''
@@ -60,10 +60,10 @@ class Drone:
 		self.current_action = 'idle'
 		config_loaded = self._load_config() # load info about the uid and auth
 		online = True # TODO: verify internet connection
-		# self.gripper = Gripper(18) # set up the gripper
-		# self.button = Button(2)	   # set up the button
-		# self.button.when_pressed   = self.gripper.open
-		# self.button.when_released  = self.gripper.close
+		self.gripper = Gripper(18) # set up the gripper
+		self.button = Button(2)	   # set up the button
+		self.button.when_pressed   = self.gripper.open
+		self.button.when_released  = self.gripper.close
 
 		return config_loaded and online
 
@@ -88,7 +88,7 @@ class Drone:
 		# REQUEST COMMAND
 		received_command = self.server.get_command()
 		# force an RTL if we haven't received a new command in more than 30 seconds
-		if self.received_command != None: self._server_connect_timer = time.time()
+		if received_command != None: self._server_connect_timer = time.time()
 		elif time.time() - self._server_connect_timer > 30: received_command = self._COMMAND_RTL
 
 		# ACT ON NEW COMMAND COMMAND

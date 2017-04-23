@@ -1,7 +1,7 @@
 {
-	"api_url" : "http://localhost/api",
+	"api_url" : "http://lunadrop.com/api",
 	"name" : "test",
-	"uid" : "dUID",
+	"uid" : "luna",
 	"auth" : "fd87dad2731a9a275c5f54f78f1f77d1",
 	"startup_status" : "initializing",
 	"wp_path" : "missions"
