@@ -101,34 +101,48 @@ class Drone:
 		# ACT ON NEW COMMAND COMMAND
 		if received_command != self._prev_command:
 			self._log('received command - ' + received_command)
+			if received_command == self._COMMAND_ARM:
+				self.pixhawk.mode = VehicleMode('STABILIZE')
+				self.pixhawk.channels.overrides['3'] = None
+				self.pixhawk.armed = True
+			elif received_command == self._COMMAND_DISARM:
+				self.pixhawk.armed = False
+			elif received_command == self._COMMAND_OPEN:
+				self.gripper.open()
+			elif received_command == self._COMMAND_CLOSE:
+				self.gripper.close()
+			elif received_command == self._COMMAND_MOTORS_ON:
+				self.pixhawk.channels.overrides['3'] = 1500
+			elif received_command == self._COMMAND_MOTORS_OFF:
+				self.pixhawk.channels.overrides['3'] = None
 
-			if received_command == self._COMMAND_START:
-				self.flow_action('prearm')
-			elif received_command == self._COMMAND_TAKEOFF:
-				self.flow_action('arm')
-			elif received_command == self._COMMAND_LAND:
-				if self.current_action == 'wait_land':
-					self.pixhawk.commands.next += 1 # advance to the landing waypoint
-					self.set_action('landing')
-				else: self._log('WARNING - Cannot land while ' + self.current_action)
-			elif received_command == self._COMMAND_RTL:
-				self.flow_action('start_rtl')
-			elif received_command == self._COMMAND_PAUSE:
-				self.flow_action('pause')
-			elif received_command == self._COMMAND_SET_MISSION:
-				if not self.pixhawk.armed:
-					wp_file = self.server.get_job()['destination']
-					if wp_file != None:
-						wp_to_load = self.wp_path + '/' + wp_file + '.txt'
-						# TODO: figure out how to error check command upload
-						upload(self.pixhawk, self.wp_path + '/' + wp_file + '.txt')
-						self.pixhawk.commands.download()
-						self.set_action('idle')
+			# if received_command == self._COMMAND_START:
+			# 	self.flow_action('prearm')
+			# elif received_command == self._COMMAND_TAKEOFF:
+			# 	self.flow_action('arm')
+			# elif received_command == self._COMMAND_LAND:
+			# 	if self.current_action == 'wait_land':
+			# 		self.pixhawk.commands.next += 1 # advance to the landing waypoint
+			# 		self.set_action('landing')
+			# 	else: self._log('WARNING - Cannot land while ' + self.current_action)
+			# elif received_command == self._COMMAND_RTL:
+			# 	self.flow_action('start_rtl')
+			# elif received_command == self._COMMAND_PAUSE:
+			# 	self.flow_action('pause')
+			# elif received_command == self._COMMAND_SET_MISSION:
+			# 	if not self.pixhawk.armed:
+			# 		wp_file = self.server.get_job()['destination']
+			# 		if wp_file != None:
+			# 			wp_to_load = self.wp_path + '/' + wp_file + '.txt'
+			# 			# TODO: figure out how to error check command upload
+			# 			upload(self.pixhawk, self.wp_path + '/' + wp_file + '.txt')
+			# 			self.pixhawk.commands.download()
+			# 			self.set_action('idle')
 
-			elif received_command == self._COMMAND_SHUTDOWN:
-				if not self.pixhawk.armed:
-					self.stop()
-					# os.system("sudo shutdown -h now")
+			# elif received_command == self._COMMAND_SHUTDOWN:
+			# 	if not self.pixhawk.armed:
+			# 		self.stop()
+			# 		# os.system("sudo shutdown -h now")
 
 			self._prev_command = received_command
 
