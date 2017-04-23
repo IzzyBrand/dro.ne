@@ -14,6 +14,8 @@ FUNCTIONALITY BRAINSTORM
  	- flying
  - monitor battery
  - log activity
+ - notice when command goes unserved and timeout appropriately
+
 
  FEATURES THAT WE PROB NEED
  - timeouts on most functions to keep loop update high
@@ -26,7 +28,7 @@ import time
 # from gpiozero import Button
 from missionHandler import upload
 from serverberry import ServerInterface
-from dronekit import connect, VehicleMode
+from dronekit import connect, VehicleMode, APIException
 from pymavlink import mavutil
 import sys
 import os
@@ -40,17 +42,28 @@ class Drone:
 	_COMMAND_LAND 			= 'land'
 	_COMMAND_PAUSE			= 'pause'
 	_COMMAND_RTL 			= 'rtl'
-	_COMMAND_SHUTDOWN		= 'shutdown'
+	_COMMAND_ARM			= 'arm'
+	_COMMAND_DISARM			= 'disarm'
+	_COMMAND_OPEN			= 'gripperOpen'
+	_COMMAND_CLOSE			= 'gripperClose'
+	_COMMAND_MOTORS_ON		= 'motorsOn'
+	_COMMAND_MOTORS_OFF		= 'motorsOff'
+
+
 
 	def start(self):
 		self.server = ServerInterface()
-		self.pixhawk = connect('/dev/cu.usbmodem1', baud = 115200, wait_ready=True) # for on mac via USB
-		# self.pixhawk = connect('/dev/tty.usbserial-DA00BL49', baud = 57600)
+		# self.pixhawk = connect('/dev/cu.usbmodem1', baud = 115200, wait_ready=True) 	# for on mac via USB
+		# # self.pixhawk = connect('/dev/ttyS0', baud = 57600, wait_ready=True) 			# for on the raspberry PI via telem2
+		# # self.pixhawk = connect('/dev/tty.usbserial-DA00BL49', baud = 57600)			# telem radio on mac
+		# # self.pixhawk = connect('/dev/tty.SLAB_USBtoUART', baud = 57600)				# telem radio on mac
 		# self.pixhawk.wait_ready(timeout=60)
-		# self.pixhawk = connect('/dev/ttyS0', baud = 57600, wait_ready=True) # for on the raspberry PI via telem2
+		# self.pixhawk.commands.download()
 		self._log('Connected to pixhawk.')
+		self._prev_pixhawk_mode = ''
 		self._prev_command = ''
 		self._arming_window_start = 0
+		self._server_connect_timer = time.time()
 		self.current_action = 'idle'
 		config_loaded = self._load_config() # load info about the uid and auth
 		online = True # TODO: verify internet connection
@@ -70,8 +83,9 @@ class Drone:
 	# STEP
 	#################################################################################
 	def step(self):
-		# CHECK BATTERY VOLTAGE
+		# UPDATE PIXHAWK INFORMATION
 		self._read_from_pixhawk()
+		self.print_mode_change()
 		# if self.state['voltage'] < voltage_emergency_threshold:
 			# RTL
 
@@ -80,37 +94,55 @@ class Drone:
 
 		# REQUEST COMMAND
 		received_command = self.server.get_command()
+		# force an RTL if we haven't received a new command in more than 30 seconds
+		if self.received_command != None: self._server_connect_timer = time.time()
+		elif time.time() - self._server_connect_timer > 30: received_command = self._COMMAND_RTL
 
 		# ACT ON NEW COMMAND COMMAND
 		if received_command != self._prev_command:
 			self._log('received command - ' + received_command)
+			if received_command == self._COMMAND_ARM:
+				self.pixhawk.mode = VehicleMode('STABILIZE')
+				self.pixhawk.channels.overrides['3'] = None
+				self.pixhawk.armed = True
+			elif received_command == self._COMMAND_DISARM:
+				self.pixhawk.armed = False
+			elif received_command == self._COMMAND_OPEN:
+				self.gripper.open()
+			elif received_command == self._COMMAND_CLOSE:
+				self.gripper.close()
+			elif received_command == self._COMMAND_MOTORS_ON:
+				self.pixhawk.channels.overrides['3'] = 1500
+			elif received_command == self._COMMAND_MOTORS_OFF:
+				self.pixhawk.channels.overrides['3'] = None
 
-			if received_command == self._COMMAND_START:
-				self.flow_action('prearm')
-			elif received_command == self._COMMAND_TAKEOFF:
-				self.flow_action('arm')
-			elif received_command == self._COMMAND_LAND:
-				if self.current_action == 'wait_land':
-					self.pixhawk.commands.next += 1 # advance to the landing waypoint
-					self.set_action('landing')
-				else: self._log('WARNING - Cannot land while ' + self.current_action)
-			elif received_command == self._COMMAND_RTL:
-				self.flow_action('start_rtl')
-			elif received_command == self._COMMAND_PAUSE:
-				self.flow_action('pause')
-			elif received_command == self._COMMAND_SET_MISSION:
-				if not self.pixhawk.armed:
-					wp_file = self.server.get_job()['destination']
-					wp_to_load = self.wp_path + '/' + wp_file + '.txt'
-					# TODO: figure out how to error check command upload
-					upload(self.pixhawk, self.wp_path + '/' + wp_file + '.txt')
-					self.pixhawk.commands.download()
-					self.set_action('idle')
+			# if received_command == self._COMMAND_START:
+			# 	self.flow_action('prearm')
+			# elif received_command == self._COMMAND_TAKEOFF:
+			# 	self.flow_action('arm')
+			# elif received_command == self._COMMAND_LAND:
+			# 	if self.current_action == 'wait_land':
+			# 		self.pixhawk.commands.next += 1 # advance to the landing waypoint
+			# 		self.set_action('landing')
+			# 	else: self._log('WARNING - Cannot land while ' + self.current_action)
+			# elif received_command == self._COMMAND_RTL:
+			# 	self.flow_action('start_rtl')
+			# elif received_command == self._COMMAND_PAUSE:
+			# 	self.flow_action('pause')
+			# elif received_command == self._COMMAND_SET_MISSION:
+			# 	if not self.pixhawk.armed:
+			# 		wp_file = self.server.get_job()['destination']
+			# 		if wp_file != None:
+			# 			wp_to_load = self.wp_path + '/' + wp_file + '.txt'
+			# 			# TODO: figure out how to error check command upload
+			# 			upload(self.pixhawk, self.wp_path + '/' + wp_file + '.txt')
+			# 			self.pixhawk.commands.download()
+			# 			self.set_action('idle')
 
-			elif received_command == self._COMMAND_SHUTDOWN:
-				if not self.pixhawk.armed:
-					self.stop()
-					# os.system("sudo shutdown -h now")
+			# elif received_command == self._COMMAND_SHUTDOWN:
+			# 	if not self.pixhawk.armed:
+			# 		self.stop()
+			# 		# os.system("sudo shutdown -h now")
 
 			self._prev_command = received_command
 
@@ -119,9 +151,13 @@ class Drone:
 		# the self.current_action allows us to have ongoing instructions
 		if self.current_action == 'prearm':
 			self.pixhawk.mode = VehicleMode('GUIDED') # we arm and takeoff in guided mode
-			self.pixhawk.commands.wait_ready() # we can't fly until we have commands list
-			self._arming_window_start = time.time()
-			self.set_action('wait_arm')
+			try:
+				self.pixhawk.commands.wait_ready() # we can't fly until we have commands list
+				self._arming_window_start = time.time()
+				self.set_action('wait_arm')
+			except APIException:
+				print 'commands still downloading.'
+				self.set_action('idle')
 
 		elif self.current_action == 'wait_arm' and time.time() - self._arming_window_start > 60:
 			self._log('TIMEOUT - revert to idle')
@@ -144,6 +180,7 @@ class Drone:
 
 		elif self.current_action == 'flying':
 			next_cmd = self.pixhawk.commands.next
+			print next_cmd, self.pixhawk.commands[next_cmd].command
 			# TODO - Determine if this should be mavutil.mavlink.MAV_CMD_NAV_LAND instead?
 			if self.pixhawk.commands[next_cmd].command == mavutil.mavlink.MAV_CMD_NAV_LOITER_UNLIM:
 				# we've reached the loiter waypoint
@@ -151,7 +188,7 @@ class Drone:
 
 		elif self.current_action == 'landing' and not self.pixhawk.armed:
 			# we were landing and now we're disarmed, so we must have landed
-			self.gripper.open()
+			# self.gripper.open()
 			self.set_action('idle')
 
 		elif self.current_action == 'disarm': 
@@ -168,6 +205,10 @@ class Drone:
 			self.pixhawk.mode = VehicleMode('RTL')
 			self.set_action('rtl')
 
+		elif (self.current_action == 'rtl' or self.current_action == 'loiter') \
+		and not self.pixhawk.armed:
+			self._log('Detected disarm while ' + self.current_action + '. Changing to idle.')
+			self.set_action('idle')
 
 	#################################################################################
 	# STATE FLOW LOGIC
@@ -252,6 +293,10 @@ class Drone:
 		}
 		return self.state
 
+	def print_mode_change(self):
+		if self.pixhawk.mode.name != self._prev_pixhawk_mode:
+			print 'MODE CHANGED TO', self.pixhawk.mode.name
+			self._prev_pixhawk_mode = self.pixhawk.mode.name
 
 if __name__ == "__main__":
     d = Drone()
