@@ -11,19 +11,20 @@ class App:
     INFO = {
         "name": "LunaDrop",
         "version": "v1.0",
-        "authors": "Benjamin Shanahan, Izzy Brand",
+        "authors": "Benjamin Shanahan, Isaiah Brand",
         "author_emails": "benjamin_shanahan@brown.edu, brand@brown.edu",
         "full_url": "http://lunadrop.com/",
         "short_url": "lunadrop.com",
         "description": "LunaDrop Autonomous Delivery",
-        "long_description": """long description here"""
+        "long_description": """LunaDrop Autonomous Delivery System"""
     }
 
 class Database:
     DRONES_TABLE = "drones"
     ZONES_TABLE = "zones"
     TYPES_TABLE = "types"
-    JOBS_TABLE = "jobs"
+    ORDERS_TABLE = "orders"
+    TASKS_TABLE = "tasks"
     USERS_TABLE = "user"
 
 class UIDConst:
@@ -31,7 +32,8 @@ class UIDConst:
     DRONE_ID = "D"  # at beginning of each drone UID
     ZONE_ID = "Z"  # at beginning of each zone UID
     TYPE_ID = "T"  # at beginning of each type UID
-    JOB_ID = "J"  # at beginning of each job UID  
+    ORDER_ID = "O"  # at beginning of each order UID  
+    TASK_ID = "K"  # at beginning of each task UID
     USER_ID = "U"  # at beginning of each user UID
 
 class Pages:
@@ -39,6 +41,7 @@ class Pages:
     TEMPLATE = {
         "index": "view/page/index.html",
         "about": "view/page/about.html",
+        "demo": "view/page/demo.html",
         "auth": "view/page/auth.html",
         "super": "view/page/super.html",
         "admin": "view/page/admin.html"
@@ -47,6 +50,7 @@ class Pages:
     URL = {
         "index": "/",
         "about": "/about",
+        "demo": "/demo",
         "auth": "/auth",
         "super": "/super",
         "admin": "/admin"

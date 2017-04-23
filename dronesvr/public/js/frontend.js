@@ -1,59 +1,166 @@
-L.mapbox.accessToken = 'pk.eyJ1IjoiaXp6eWJyYW5kIiwiYSI6ImNpeTdzdHh3ZDAwNncycXN4eTYyY2k3dTAifQ.WzrAcd4xaQ0dd7ur3u0fSQ';
+// Get page information
+var username = $("#username").val();
+var selectedDestination = "";
+var selectedFlavor = "";
 
-var map = L.mapbox.map('map', 'mapbox.streets', {
-    keyboard: false
-}).setView([41.8258611,-71.4034908],17);
+// Default colors
+var unselectedColor = "#990000";
+var selectedColor = "#0066ff";
 
-var zoneLayer = L.mapbox.featureLayer().addTo(map); // layer to hold the zone icons
-
-// generates a zone feature geoJson which can we badded to a feature collection
-function generateZoneFeature(name, lat, lon) {
-    return {
-      "type": "Feature",
-      "geometry": {
-          "type": "Point",
-          "coordinates": [lon, lat]
-      },
-      "properties": {
-          "title": name, // name of point to show when clicked
-          "icon": {
-              "iconUrl": "/static/img/zone.png",
-              "iconSize": [40, 40], // size of the icon
-              "iconAnchor": [20, 20], // point of the icon which will correspond to marker's location
-              "popupAnchor": [0, -20], // point from which the popup should open relative to the iconAnchor
-              "className": "dot"
-          }
-      }
-  }
+// Define feature markers (TODO: put this in a separate text file?!)
+var info = {
+    "ruthsimmons": {
+        "name": "Ruth Simmons",
+        "destination": "ruthsimmons",
+        "description": "Ruth Simmon's delivery",
+        "latitude": 41.826316,
+        "longitude": -71.401063,
+        "marker-color": unselectedColor,
+        "selected": false,
+        "marker-size": "small"
+    },
+    "quietgreen": {
+        "name": "Quiet Green",
+        "destination": "quietgreen",
+        "description": "Quiet Green delivery",
+        "latitude": 41.826168,
+        "longitude": -71.404168,
+        "marker-color": unselectedColor,
+        "selected": false,
+        "marker-size": "small"
+    },
+    "maingreen": {
+        "name": "Main Green",
+        "destination": "maingreen",
+        "description": "Main Green delivery",
+        "latitude": 41.826028,
+        "longitude": -71.403429,
+        "marker-color": unselectedColor,
+        "selected": false,
+        "marker-size": "small"
+    }
 }
 
-var testCoord = 41.826317
+// Define full geoJson structure
+var geoJson = {
+    type: "FeatureCollection",
+    features: [
+        generateFeature(info["ruthsimmons"]),
+        generateFeature(info["maingreen"]),
+        generateFeature(info["quietgreen"])
+    ]
+}
 
-var zoneGeoJson = {
-  type: 'FeatureCollection',
-  features: [
-  generateZoneFeature('Ruth Simmon\'s East', 41.826317, -71.401175),
-  generateZoneFeature('Wriston West', 41.825031, -71.402029),
-  generateZoneFeature('Main Green Center', 41.826063, -71.403322),
-  generateZoneFeature('Pembroke Field Center', 41.829639, -71.399062),
-  generateZoneFeature('The Walk North', 41.827663, -71.401896)
-  ]
-};
+// Define map
+L.mapbox.accessToken = 'pk.eyJ1IjoiaXp6eWJyYW5kIiwiYSI6ImNpeTdzdHh3ZDAwNncycXN4eTYyY2k3dTAifQ.WzrAcd4xaQ0dd7ur3u0fSQ';
+var map = L.mapbox.map("map","mapbox.dark",{zoomControl: false}).setView([41.826192,-71.402693],16);
 
-// Set a custom icon on each marker based on feature properties.
-zoneLayer.on('layeradd', function(e) {
-    var marker = e.layer, feature = marker.feature;
-    marker.setIcon(L.icon(feature.properties.icon));
+// Define map layer
+var myLayer = L.mapbox.featureLayer().addTo(map);
+myLayer.setGeoJSON(geoJson);
+
+// Define event listeners for interactivity
+myLayer.on("click",function(e) {
+    if (!e.layer.feature.properties["selected"]) {
+        resetColors();
+        e.layer.feature.properties["marker-color"] = selectedColor;
+        e.layer.feature.properties["selected"] = true;
+        var fullName = e.layer.feature.properties["name"];
+        selectedDestination = e.layer.feature.properties["destination"];
+        var msg = "Delivery at <span class='bold'>" + fullName + "</span>.";
+        secondNotify(msg);
+        showPlaceOrderButton();
+    }
+    myLayer.setGeoJSON(geoJson);
 });
 
-// Add features to the map.
-zoneLayer.setGeoJSON(zoneGeoJson);
+//////////////////////////////////////////////////
 
+// HELPER FUNCTIONS //
+// Generate geoJSON data for each destination feature
+function generateFeature(info) {
+    return {
+        type: "Feature",
+        properties: {
+            "name": info["name"],
+            "destination": info["destination"],
+            "description": info["description"],
+            "marker-color": info["marker-color"],
+            "selected-color": info["selected-color"],
+            "selected": info["selected"],
+            "marker-size": info["marker-size"]
+        },
+        geometry: {
+            type: "Point",
+            coordinates: [info["longitude"],info["latitude"]]
+        }
+    }
+}
 
-//droneLayer.setGeoJSON(droneGeoJson);
+// Reset color of all markers in geoJson structure
+function resetColors() {
+    for (var i = 0; i < geoJson.features.length; i++) {
+        geoJson.features[i].properties["marker-color"] = unselectedColor;
+        geoJson.features[i].properties["selected"] = false;
+    }
+    myLayer.setGeoJSON(geoJson);
+}
 
-setInterval(function move(){
-    testCoord += 0.01
-    // console.log(testCoord)
-    zoneLayer.setGeoJSON(zoneGeoJson);
-    }, 1000)
+// Check that selectedFlavor and selectedDestination are valid
+function verifySelections() {
+    // Check that inputs are non-empty
+    var non_empty = (selectedFlavor && selectedDestination);
+    return non_empty;
+}
+
+// Push alert to notify user. TODO: make this less intrusive!
+function firstNotify(msg) {
+    $("#first-notification").html(msg).show("fast");
+}
+function secondNotify(msg) {
+    $("#second-notification").html(msg).show("fast");
+}
+function hideNotification(num) {
+    if (num == 1) {
+        $("#first-notification").hide("fast");    
+    } else if (num == 2) {
+        $("#second-notification").hide("fast");
+    }
+}
+
+// AJAX functionality to asynchronously add an order
+function addOrder() {
+    if (verifySelections()) {
+        // alert("Your order has been placed!");
+        $.post("/addorder", {flavor: selectedFlavor, destination: selectedDestination})
+            .done(function(result) {
+                var parsed = $.parseJSON(result);
+                alert(parsed.message);
+            });
+    }
+}
+
+// Check that user has selected a flavor (and that form is not still set to empty)
+function checkFlavorChoice() {
+    var type = $("#flavor-select").val();
+    if (type != "default") {
+        selectedFlavor = type;
+        showLocationSelectionScreen();
+        var msg = "You've selected a <span class='bold'>" + type + "</span> donut. <a href='#' onclick='showFlavorSelectionScreen()'>Change</a>.";
+        firstNotify(msg);
+    }
+}
+
+// Show / hide location and flavor selection screens
+function showLocationSelectionScreen() {
+    $("#landing-page-overlay").hide("fast");
+}
+function showFlavorSelectionScreen() {
+    $("#landing-page-overlay").show("fast");
+    $("#first-notification").hide("fast");
+}
+
+// Display order button on screen
+function showPlaceOrderButton() {
+    $("#place-order-button").show("fast");
+}
