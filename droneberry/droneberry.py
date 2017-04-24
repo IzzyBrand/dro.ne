@@ -24,8 +24,8 @@ FUNCTIONALITY BRAINSTORM
 import json
 import datetime
 import time
-from gripper import Gripper
-from gpiozero import Button
+# from gripper import Gripper
+# from gpiozero import Button
 from missionHandler import upload
 from serverberry import ServerInterface
 from dronekit import connect, VehicleMode, APIException
@@ -36,7 +36,7 @@ import os
 
 
 class Drone:
-	_COMMAND_SET_MISSION 	= 'updatezone'
+	_COMMAND_SET_MISSION 	= 'updatemission'
 	_COMMAND_START			= 'start'
 	_COMMAND_TAKEOFF 		= 'takeoff'
 	_COMMAND_LAND 			= 'land'
@@ -46,13 +46,13 @@ class Drone:
 
 	def start(self):
 		self.server = ServerInterface()
-		# self.pixhawk = connect('/dev/cu.usbmodem1', baud = 115200, wait_ready=True) 	# for on mac via USB
-		self.pixhawk = connect('/dev/ttyS0', baud = 57600, wait_ready=True) 			# for on the raspberry PI via telem2
+		self.pixhawk = connect('/dev/cu.usbmodem1', baud = 115200, wait_ready=True) 	# for on mac via USB
+		# self.pixhawk = connect('/dev/ttyS0', baud = 57600, wait_ready=True) 			# for on the raspberry PI via telem2
 		# # self.pixhawk = connect('/dev/tty.usbserial-DA00BL49', baud = 57600)			# telem radio on mac
 		# # self.pixhawk = connect('/dev/tty.SLAB_USBtoUART', baud = 57600)				# telem radio on mac
 		#self.pixhawk.wait_ready(timeout=60)
-		#self.pixhawk.commands.download()
 		self._log('Connected to pixhawk.')
+		self.pixhawk.commands.download()
 		self._prev_pixhawk_mode = ''
 		self._prev_command = ''
 		self._arming_window_start = 0
@@ -60,10 +60,10 @@ class Drone:
 		self.current_action = 'idle'
 		config_loaded = self._load_config() # load info about the uid and auth
 		online = True # TODO: verify internet connection
-		self.gripper = Gripper(18) # set up the gripper
-		self.button = Button(2)	   # set up the button
-		self.button.when_pressed   = self.gripper.open
-		self.button.when_released  = self.gripper.close
+		# self.gripper = Gripper(18) # set up the gripper
+		# self.button = Button(2)	   # set up the button
+		# self.button.when_pressed   = self.gripper.open
+		# self.button.when_released  = self.gripper.close
 
 		return config_loaded and online
 
@@ -110,7 +110,7 @@ class Drone:
 				self.flow_action('pause')
 			elif received_command == self._COMMAND_SET_MISSION:
 				if not self.pixhawk.armed:
-					wp_file = self.server.get_job()['destination']
+					wp_file = self.server.get_mission()['destination']
 					if wp_file != None:
 						wp_to_load = self.wp_path + '/' + wp_file + '.txt'
 						# TODO: figure out how to error check command upload

@@ -47,11 +47,11 @@ class ServerInterface:
 		if r == None: return None
 		else: return json.loads(r)['command']
 
-	# get the job json from the server (this has all the info about the mission)
-	def get_job(self):
-		r = self.get('job')
+	# get the mission json from the server (this has all the info about the mission)
+	def get_mission(self):
+		r = self.get('mission')
 		if r == None: return None
-		else: return json.loads(r)
+		else: return json.loads(r)['activemission']
 	
 	# send and error message to the server
 	def post_err_message(self, error):
