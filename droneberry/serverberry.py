@@ -19,11 +19,15 @@ class ServerInterface:
 			 "auth": self.auth,
 			 "state": json.dumps(state_json)
 		 }
-		response = requests.post(self.api_url, data=payload)
-		if response.status_code - 200 < 10:
-			return response.text
-		else: 
-			print '[POST ERROR]: got status code', str(response.status_code)
+	 	try:
+			response = requests.post(self.api_url, data=payload)
+			if response.status_code - 200 < 10:
+				return response.text
+			else: 
+				print '[POST ERROR]: got status code', str(response.status_code)
+				return None
+		except requests.exceptions.ConnectionError as e:
+			print '[POST ERROR]:', e.message
 			return None
 
 	def get(self, subset=None):
