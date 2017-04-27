@@ -90,13 +90,18 @@ class Drone:
 			# RTL
 
 		# SEND STATE UPDATE
+		if self.pixhawk.armed:
+			if self.pixhawk.channels.overrides['3'] == 1500:
+				self.current_action = 'throttled'
+			else: self.current_action = 'armed'
+		else: self.current_action = 'disarmed'
 		self.server.post(self.state)
 
 		# REQUEST COMMAND
 		received_command = self.server.get_command()
-		# force an RTL if we haven't received a new command in more than 30 seconds
+		# Disarm if we haven't received a new command in more than 30 seconds
 		if received_command != None: self._server_connect_timer = time.time()
-		elif time.time() - self._server_connect_timer > 30: received_command = self._COMMAND_RTL
+		elif time.time() - self._server_connect_timer > 30: self.pixhawk.armed = False
 
 		# ACT ON NEW COMMAND COMMAND
 		if received_command != self._prev_command:
@@ -114,101 +119,73 @@ class Drone:
 			elif received_command == self._COMMAND_MOTORS_ON:
 				self.pixhawk.channels.overrides['3'] = 1500
 			elif received_command == self._COMMAND_MOTORS_OFF:
-				self.pixhawk.channels.overrides['3'] = 1300
-
-			# if received_command == self._COMMAND_START:
-			# 	self.flow_action('prearm')
-			# elif received_command == self._COMMAND_TAKEOFF:
-			# 	self.flow_action('arm')
-			# elif received_command == self._COMMAND_LAND:
-			# 	if self.current_action == 'wait_land':
-			# 		self.pixhawk.commands.next += 1 # advance to the landing waypoint
-			# 		self.set_action('landing')
-			# 	else: self._log('WARNING - Cannot land while ' + self.current_action)
-			# elif received_command == self._COMMAND_RTL:
-			# 	self.flow_action('start_rtl')
-			# elif received_command == self._COMMAND_PAUSE:
-			# 	self.flow_action('pause')
-			# elif received_command == self._COMMAND_SET_MISSION:
-			# 	if not self.pixhawk.armed:
-			# 		wp_file = self.server.get_job()['destination']
-			# 		if wp_file != None:
-			# 			wp_to_load = self.wp_path + '/' + wp_file + '.txt'
-			# 			# TODO: figure out how to error check command upload
-			# 			upload(self.pixhawk, self.wp_path + '/' + wp_file + '.txt')
-			# 			self.pixhawk.commands.download()
-			# 			self.set_action('idle')
-
-			# elif received_command == self._COMMAND_SHUTDOWN:
-			# 	if not self.pixhawk.armed:
-			# 		self.stop()
-			# 		# os.system("sudo shutdown -h now")
+				self.pixhawk.channels.overrides['3'] = 1000
 
 			self._prev_command = received_command
 
 
-		# ACT ON ONGOING ACTION
-		# the self.current_action allows us to have ongoing instructions
-		if self.current_action == 'prearm':
-			self.pixhawk.mode = VehicleMode('GUIDED') # we arm and takeoff in guided mode
-			try:
-				self.pixhawk.commands.wait_ready() # we can't fly until we have commands list
-				self._arming_window_start = time.time()
-				self.set_action('wait_arm')
-			except APIException:
-				print 'commands still downloading.'
-				self.set_action('idle')
+		# # ACT ON ONGOING ACTION
+		# # the self.current_action allows us to have ongoing instructions
+		# if self.current_action == 'prearm':
+		# 	self.pixhawk.mode = VehicleMode('GUIDED') # we arm and takeoff in guided mode
+		# 	try:
+		# 		self.pixhawk.commands.wait_ready() # we can't fly until we have commands list
+		# 		self._arming_window_start = time.time()
+		# 		self.set_action('wait_arm')
+		# 	except APIException:
+		# 		print 'commands still downloading.'
+		# 		self.set_action('idle')
 
-		elif self.current_action == 'wait_arm' and time.time() - self._arming_window_start > 60:
-			self._log('TIMEOUT - revert to idle')
-			self.set_action('idle')
+		# elif self.current_action == 'wait_arm' and time.time() - self._arming_window_start > 60:
+		# 	self._log('TIMEOUT - revert to idle')
+		# 	self.set_action('idle')
 
-		elif self.current_action == 'arm':
-			self.pixhawk.armed = True
-			self._log('arm')
-			self.set_action('takeoff')
+		# elif self.current_action == 'arm':
+		# 	self.pixhawk.armed = True
+		# 	self._log('arm')
+		# 	self.set_action('takeoff')
 
-		elif self.current_action == 'takeoff' \
-			and self.pixhawk.armed: # we need to verify that the pixhawk is armed
-			self.pixhawk.simple_takeoff(20)
-			self.set_action('mission_start')
+		# elif self.current_action == 'takeoff' \
+		# 	and self.pixhawk.armed: # we need to verify that the pixhawk is armed
+		# 	self.pixhawk.simple_takeoff(20)
+		# 	self.set_action('mission_start')
 
-		elif self.current_action == 'mission_start':
-			self.pixhawk.commands.next = 0	# start from the first waypoint
-			self.pixhawk.mode = VehicleMode('AUTO')
-			self.set_action('flying')
+		# elif self.current_action == 'mission_start':
+		# 	self.pixhawk.commands.next = 0	# start from the first waypoint
+		# 	self.pixhawk.mode = VehicleMode('AUTO')
+		# 	self.set_action('flying')
 
-		elif self.current_action == 'flying':
-			next_cmd = self.pixhawk.commands.next
-			print next_cmd, self.pixhawk.commands[next_cmd].command
-			# TODO - Determine if this should be mavutil.mavlink.MAV_CMD_NAV_LAND instead?
-			if self.pixhawk.commands[next_cmd].command == mavutil.mavlink.MAV_CMD_NAV_LOITER_UNLIM:
-				# we've reached the loiter waypoint
-				self.set_action('wait_land')
+		# elif self.current_action == 'flying':
+		# 	next_cmd = self.pixhawk.commands.next
+		# 	print next_cmd, self.pixhawk.commands[next_cmd].command
+		# 	# TODO - Determine if this should be mavutil.mavlink.MAV_CMD_NAV_LAND instead?
+		# 	if self.pixhawk.commands[next_cmd].command == mavutil.mavlink.MAV_CMD_NAV_LOITER_UNLIM:
+		# 		# we've reached the loiter waypoint
+		# 		self.set_action('wait_land')
 
-		elif self.current_action == 'landing' and not self.pixhawk.armed:
-			# we were landing and now we're disarmed, so we must have landed
-			# self.gripper.open()
-			self.set_action('idle')
+		# elif self.current_action == 'landing' and not self.pixhawk.armed:
+		# 	# we were landing and now we're disarmed, so we must have landed
+		# 	# self.gripper.open()
+		# 	self.set_action('idle')
 
-		elif self.current_action == 'disarm': 
-			self._log('disarm')
-			self.pixhawk.armed = False
-			if not self.pixhawk.armed: self.set_action('idle')
-			else:	self._log('DISARM FAILED')
+		# elif self.current_action == 'disarm': 
+		# 	self._log('disarm')
+		# 	self.pixhawk.armed = False
+		# 	if not self.pixhawk.armed: self.set_action('idle')
+		# 	else:	self._log('DISARM FAILED')
 
-		elif self.current_action == 'pause':
-			self.pixhawk.mode = VehicleMode('LOITER')
-			self.set_action('loiter')
+		# elif self.current_action == 'pause':
+		# 	self.pixhawk.mode = VehicleMode('LOITER')
+		# 	self.set_action('loiter')
 
-		elif self.current_action == 'start_rtl':
-			self.pixhawk.mode = VehicleMode('RTL')
-			self.set_action('rtl')
+		# elif self.current_action == 'start_rtl':
+		# 	self.pixhawk.mode = VehicleMode('RTL')
+		# 	self.set_action('rtl')
 
-		elif (self.current_action == 'rtl' or self.current_action == 'loiter') \
-		and not self.pixhawk.armed:
-			self._log('Detected disarm while ' + self.current_action + '. Changing to idle.')
-			self.set_action('idle')
+		# elif (self.current_action == 'rtl' or self.current_action == 'loiter') \
+		# and not self.pixhawk.armed:
+		# 	self._log('Detected disarm while ' + self.current_action + '. Changing to idle.')
+		# 	self.set_action('idle')
 
 	#################################################################################
 	# STATE FLOW LOGIC
@@ -298,20 +275,20 @@ class Drone:
 			print 'MODE CHANGED TO', self.pixhawk.mode.name
 			self._prev_pixhawk_mode = self.pixhawk.mode.name
 
-	def safetyOn(self):
-		mavutil.mavlink.MAV_MODE_FLAG_DECODE_POSITION_SAFETY
+	# def safetyOn(self):
+	# 	mavutil.mavlink.MAV_MODE_FLAG_DECODE_POSITION_SAFETY
 		
-		msg = vehicle.message_factory.set_position_target_local_ned_encode(
-		    0,       # time_boot_ms (not used)
-		    0, 0,    # target_system, target_component
-		    mavutil.mavlink.MAV_FRAME_BODY_NED, # frame
-		    0b0000111111000111, # type_mask (only speeds enabled)
-		    0, 0, 0, # x, y, z positions
-		    velocity_x, velocity_y, velocity_z, # x, y, z velocity in m/s
-		    0, 0, 0, # x, y, z acceleration (not supported yet, ignored in GCS_Mavlink)
-		    0, 0)    # yaw, yaw_rate (not supported yet, ignored in GCS_Mavlink)
-		# send command to vehicle
-		vehicle.send_mavlink(msg)
+	# 	msg = vehicle.message_factory.set_position_target_local_ned_encode(
+	# 	    0,       # time_boot_ms (not used)
+	# 	    0, 0,    # target_system, target_component
+	# 	    mavutil.mavlink.MAV_FRAME_BODY_NED, # frame
+	# 	    0b0000111111000111, # type_mask (only speeds enabled)
+	# 	    0, 0, 0, # x, y, z positions
+	# 	    velocity_x, velocity_y, velocity_z, # x, y, z velocity in m/s
+	# 	    0, 0, 0, # x, y, z acceleration (not supported yet, ignored in GCS_Mavlink)
+	# 	    0, 0)    # yaw, yaw_rate (not supported yet, ignored in GCS_Mavlink)
+	# 	# send command to vehicle
+	# 	vehicle.send_mavlink(msg)
 
 if __name__ == "__main__":
     d = Drone()
