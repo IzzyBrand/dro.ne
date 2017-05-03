@@ -170,12 +170,12 @@ class Drone:
 		# if there is no takeoff waypoint and the pixhawk disarms, open the gripper anyway just to
 		# be safe
 		elif self.current_action = 'landing':
-			if self.pixhawk.commands[next_cmd].command == mavutil.mavlink.MAV_CMD_NAV_TAKEOFF:
-				self.gripper.open()
-				self.set_action('flying')
 			if self.pixhawk.armed = False:
 				self.gripper.open()
 				self.set_action('idle')
+			elif self.pixhawk.commands[next_cmd].command == mavutil.mavlink.MAV_CMD_NAV_TAKEOFF:
+				self.gripper.open()
+				self.set_action('flying')
 
 		elif self.current_action == 'disarm': 
 			self._log('disarm')
