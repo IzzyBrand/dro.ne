@@ -9,11 +9,15 @@ class Controller:
     def __init__(self):
         self.db = DBFunc()
         Status.out("Connected to database")
+        # NOTE: by preloading the drones, we don't allow the manager to handle
+        # dynamically adding a new drone to the database
         self.drone_uids = self.db.get_all("uid","drones")
-        self.zone_uids = self.db.get_all("uid","zones")
-        self.type_uids = self.db.get_all("uid","types")
         self.get = Get(self.db)
         self.set = Set(self.db)
+        # a list of dicts to store each drone
+        self.drones = map(lambda uid: {
+            'uid':uid, 
+            'name':self.get.general(uid)['name']}, self.drone_uids)
         Status.out("Loaded information from database")
 
     # Run the following at each processing iteration (step)
@@ -38,17 +42,31 @@ class Controller:
             - land          -> update current wp_file in task to next in mission, or end task if last wp_file
 
         """
+        # download the orders
+        
+        exists_idle_drone = False
+        # update the status of each drone
+        for d in self.drones: d['status'] = self.get.state(d['uid'])['status']
+        # refresh the orders list if there is an idle drone to handle a new task
+        if is_idle_drone(): self.order_uids = self.db.get_all('uid','orders')
+
+
+
+
+
         for uid in self.drone_uids:
             # Drone info
             name = self.get.general(uid)["name"]
-            command = self.get.state(uid)["status"]
+            status = self.get.state(uid)["status"]
             job = self.get.job(uid)
-            Status.out("{} ({}) is on job '{}'".format(name,command,job["uid"]))
+            Status.out("{} ({}) is on job '{}'".format(name,status,job["uid"]))
 
             # choose random command just to verify that setting values works
             self.set.status(uid,random.choice([
                 "idle","takeoff","rtl","pause","landing"
             ]))
+
+
 
 
 
