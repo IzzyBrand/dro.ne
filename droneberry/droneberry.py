@@ -165,10 +165,20 @@ class Drone:
 				# we've reached the loiter waypoint
 				self.set_action('wait_land')
 
-		elif self.current_action == 'landing' and not self.pixhawk.armed:
-			# we were landing and now we're disarmed, so we must have landed
-			# self.gripper.open()
-			self.set_action('idle')
+		# this is the old way of handling gripper actuation. we trigger the gripper upon disarm.
+		# elif self.current_action == 'landing' and not self.pixhawk.armed:
+		# 	# we were landing and now we're disarmed, so we must have landed
+		# 	# self.gripper.open()
+		# 	self.set_action('idle')
+
+		# if there is a consectutive land followed by a takeoff waypoint, then we actuate the 
+		# gripper on the takeoff waypoint so we release the box just before we leave the ground
+		elif self.current_action = 'landing':
+			if self.pixhawk.commands[next_cmd].command == mavutil.mavlink.MAV_CMD_NAV_TAKEOFF:
+				self.gripper.open()
+				self.set_action('flying')
+			if self.pixhawk.armed = False:
+				self.set_action('disarm')
 
 		elif self.current_action == 'disarm': 
 			self._log('disarm')
