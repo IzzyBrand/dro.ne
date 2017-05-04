@@ -22,52 +22,65 @@ class Controller:
 
     # Run the following at each processing iteration (step)
     def step(self):
-        """
-        1. Get updated drone statuses from DB
-        2. Get updated user inputs from DB
-        3. Respond to user inputs
-            - rtl               -> command rtl
-            - pause             -> command pause
-            - resume            -> command resume
-            - approve takeoff   -> command takeoff
-            - approve land      -> command land
-
-        4. Respond to updated status for each drone
-            - idle          
-                if no task:    dequeue task and delegate
-                if task:       command updatezone (only do this once. maybe check drone's mission matches desired mission?)
-
-            - wait_land     -> command land if user click
-            - wait_arm      -> command takeoff if user click
-            - land          -> update current wp_file in task to next in mission, or end task if last wp_file
-
-        """
-        # download the orders
-        
         exists_idle_drone = False
+
         # update the status of each drone
-        for d in self.drones: d['status'] = self.get.state(d['uid'])['status']
+        for d in self.drones: 
+            s = self.get.state(d['uid']) # TODO: do we need to error check this?
+            d['status'] = s['status']
+            d['voltage'] = s['voltage']
+            exists_idle_drone = exists_idle_drone or (d['status'] == 'idle')
+
         # refresh the orders list if there is an idle drone to handle a new task
-        if is_idle_drone(): self.order_uids = self.db.get_all('uid','orders')
+        if exists_idle_drone: self.orders = map(lambda order_uid: 
+            self.get.order(order_uid), self.db.get_all('uid','orders'))
+
+        for d in self.drones:
+            if d['status'] == 'idle':
+                order_uid = self.get_oldest_doable_order(d['uid'])
+                # if the drone can't handle the shortest order in the list or if there are no 
+                # orders queued, then we may as well change the battery on the drone
+                if order_uid is None:
+                    # NOTE: we need to decide how exactly we want to handle this
+                    d.set.command(d['uid'], 'change_battery')
+                else:
+                    task_uid = self.create_task_from_order(d['uid'], order_uid)
+                    d.set.command(d['uid'], 'updatemission')
+                    # TODO: how do we tell the hub workers what to pack onto which drone
+
+            elif d['status'] == 'wait_arm':
+            elif d['status'] == 'wait_land':
 
 
+    # goes through the order list and retrieves the uid which corresponds to the
+    # order which has waited longest which the drone could handle right now
+    def get_oldest_doable_order(self, drone):
+        # for the purposes of a single site demo, we only need a lower voltage
+        # threshold. The logic here will need to be updated when we introduce multiple
+        # sites. 
+        if drone['voltage'] < 15.5:
+            Status.out("Drone {} has insufficient voltage ({}v) to complete a job".
+                format(drone['name'], drone['voltage']))
+            return None
+        else:
+            oldest_incomplete_order = None
+            for o in orders:
+                # TODO: I've coded this assuming and order get's assigned a drone
+                # when it get's turned into a task. is this the way we want to
+                # represent that an order is being handled?
+                if o['drone_uid'] == '' and (oldest_incomplete_order is None \
+                or o['timestamp'] < oldest_incomplete_order['timestamp']):
+                        oldest_incomplete_order = o
+
+            if oldest_incomplete_order is None: return None
+            else: return oldest_incomplete_order['uid']
 
 
-
-        for uid in self.drone_uids:
-            # Drone info
-            name = self.get.general(uid)["name"]
-            status = self.get.state(uid)["status"]
-            job = self.get.job(uid)
-            Status.out("{} ({}) is on job '{}'".format(name,status,job["uid"]))
-
-            # choose random command just to verify that setting values works
-            self.set.status(uid,random.choice([
-                "idle","takeoff","rtl","pause","landing"
-            ]))
-
-
-
+    # creates a new task from the given order_uid and assigns it to
+    # the given drone_uid. the uid of the new task is returned
+    def create_task_from_order(self, drone_uid, order_uid):
+        # TODO: implement this once db structure is clarified
+        return 'task_uid'
 
 
 """ Get information from database """
@@ -136,6 +149,16 @@ class Get:
             "general": self.general()
         }
 
+    def order(self,uid):
+        # TODO: this will need to be updated once we clarify exactly what the orders
+        # db structure is. do we have a field for eta? for which drone? for completed?
+        return {
+            'uid': uid,
+            'destination': self.db.get(uid, 'destination', 'orders'),
+            'timestamp': self.db.get(uid, 'timestamp', 'orders')
+            'drone_uid': self.db.get(uid, 'drone_uid', 'orders')
+        }
+
 
 """ Set information in database """
 class Set:
@@ -148,3 +171,6 @@ class Set:
 
     def job(self,uid,new_job=None):
         self.db.set(new_job,uid,"job","drones")
+
+    def command(self,uid, new_command):
+        self.db.set(new_command,uid,"command","drones")
