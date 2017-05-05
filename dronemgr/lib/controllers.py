@@ -47,6 +47,7 @@ class Controller:
                     task_uid = self.create_task_from_order(d['uid'], order_uid)
                     d.set.command(d['uid'], 'updatemission')
                     # TODO: how do we tell the hub workers what to pack onto which drone
+                    # BEN Note: we could set the command flag "loadorder" or something, and then the front-end knows to grab the items for the current drone's order.
 
             elif d['status'] == 'wait_arm':
             elif d['status'] == 'wait_land':
@@ -68,6 +69,7 @@ class Controller:
                 # TODO: I've coded this assuming and order get's assigned a drone
                 # when it get's turned into a task. is this the way we want to
                 # represent that an order is being handled?
+                # BEN Note: The drone itself has a task and the task has a drone (so its redundant)
                 if o['drone_uid'] == '' and (oldest_incomplete_order is None \
                 or o['timestamp'] < oldest_incomplete_order['timestamp']):
                         oldest_incomplete_order = o
