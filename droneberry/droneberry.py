@@ -86,7 +86,7 @@ class Drone:
 			# RTL
 
 		# SEND STATE UPDATE
-		self.server.post(self.state)
+		self.server.post_state(self.state)
 
 		# REQUEST COMMAND
 		received_command = self.server.get_command()
@@ -113,12 +113,13 @@ class Drone:
 				self.flow_action('pause')
 			elif received_command == self._COMMAND_SET_MISSION:
 				if not self.pixhawk.armed:
-					wp_file = self.server.get_mission()['destination']
+					wp_file = self.server.get_mission()
 					if wp_file != None:
 						wp_to_load = self.wp_path + '/' + wp_file + '.txt'
 						# TODO: figure out how to error check command upload
 						upload(self.pixhawk, self.wp_path + '/' + wp_file + '.txt')
 						self.pixhawk.commands.download()
+						self.server.post_mission(wp_file)
 						self.set_action('idle')
 
 			elif received_command == self._COMMAND_SHUTDOWN:
