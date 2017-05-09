@@ -25,7 +25,7 @@ class Controller:
     def step(self):
         exists_idle_drone = False
 
-        # update the status of each drone
+        # update the state of each drone
         for d in self.drones: 
             s = self.get.state(d['uid']) # TODO: do we need to error check this?
             d['status'] = s['status']
@@ -38,53 +38,72 @@ class Controller:
 
         for d in self.drones:
             if d['status'] == 'idle':
-                order_uid = self.get_oldest_doable_order(d['uid'])
-                # if the drone can't handle the shortest order in the list or if there are no 
-                # orders queued, then we may as well change the battery on the drone
-                if order_uid is None:
-                    # NOTE: we need to decide how exactly we want to handle this
-                    d.set.command(d['uid'], 'change_battery')
+                order = self.get_oldest_doable_order(d['uid'])
+                if order is None:
+                    # NOTE: if the drone can't handle the shortest order in the list or if there are no 
+                    # orders queued, then we may as well change the battery on the drone
+                    self.set.status(d['uid'], 'changebattery')
                 else:
-                    task_uid = self.create_task_from_order(d['uid'], order_uid)
-                    d.set.command(d['uid'], 'updatemission')
-                    # TODO: how do we tell the hub workers what to pack onto which drone
-                    # BEN Note: we could set the command flag "loadorder" or something, and then the front-end knows to grab the items for the current drone's order.
+                    task_uid = self.create_task_from_order(d['uid'], order)
+                    if task_uid:
+                        self.set.task(d['uid'], task_uid)           # update the drone's task
+                        self.set.command(d['uid'], 'updatemission') # tell the drone to update its wp file
+                        self.set.status('wait_start')               # don't let the drone get overwritten
+                        # BEN TODO: we could set a frontend command flag "loadorder" or something
+                        # and then the front-end knows to grab the items for the current drone's order.
+                    else:
+                        Status.out("ERROR - Failed to create a task from order {} for drone {}.".
+                            format(order['uid'], drone['name']))
 
-            elif d['status'] == 'wait_arm':
-            elif d['status'] == 'wait_land':
 
+    ###################################################
+    ###               HELPER FUNCTIONS              ###
+    ###################################################
 
     # goes through the order list and retrieves the uid which corresponds to the
     # order which has waited longest which the drone could handle right now
-    def get_oldest_doable_order(self, drone):
-        # for the purposes of a single site demo, we only need a lower voltage
-        # threshold. The logic here will need to be updated when we introduce multiple
-        # sites. 
-        if drone['voltage'] < 15.5:
+    def get_oldest_doable_order(self, drone, orders):
+        if drone['voltage'] < 14.8: # TODO: change this check to take into account the drone's type
             Status.out("Drone {} has insufficient voltage ({}v) to complete a job".
                 format(drone['name'], drone['voltage']))
             return None
         else:
             oldest_incomplete_order = None
-            for o in orders:
-                # TODO: I've coded this assuming and order get's assigned a drone
-                # when it get's turned into a task. is this the way we want to
-                # represent that an order is being handled?
-                # BEN Note: The drone itself has a task and the task has a drone (so its redundant)
-                if o['drone_uid'] == '' and (oldest_incomplete_order is None \
-                    
-                # dt = parser.parse("Aug 28 1999 12:00AM")
-                or o['timestamp'] < oldest_incomplete_order['timestamp']):
-                        oldest_incomplete_order = o
+            for order in orders:
+                if self.drone_can_handle_order(drone, order) and (oldest_incomplete_order is None \
+                or order['timestamp'] < oldest_incomplete_order['timestamp']):
+                        oldest_incomplete_order = order
 
             if oldest_incomplete_order is None: return None
-            else: return oldest_incomplete_order['uid']
+            else: return oldest_incomplete_order
 
+    # takes a drone and an order and returns true if the drone would be capable
+    # of carrying that order
+    # TODO: in the future, we can reference a drone's payload/range/power and the order's
+    # weight/distance to assess if the given drone can handle the given order.
+    # TODO: if we do want to cluster multiple orders into a task, then we need to generate
+    # candidate tasks to check as opposed to just checking the individual orders
+    def drone_can_handle_order(self, drone, order):
+        return drone['voltage'] > 15.5
 
-    # creates a new task from the given order_uid and assigns it to
+    # creates a new task from the given order and assigns it to
     # the given drone_uid. the uid of the new task is returned
-    def create_task_from_order(self, drone_uid, order_uid):
-        # TODO: implement this once db structure is clarified
-        return 'task_uid'
+    def create_task_from_order(self, drone_uid, order):
+        mission = self.get_mission_from_destination(order['destination'])
+        new_task = {
+            'drone': drone_uid,
+            'orders': order['uid'], # NOTE: we may change this to be a list of orders
+            'mission': mission
+        }
+        return self.db.add_task(new_task)
+
+    # TODO: takes a destination (or hopefully a sequence of destinations at some point) and returns 
+    # a wp filename (or hopefully just a series of waypoints at some point)
+    def get_mission_from_destination(self, destination):
+        # NOTE: I know this looks silly. For the first demo all missions are out and back
+        # and the names of the wp files are the same as the destination
+        if destination   == 'ruthsimmons':  return 'ruthsimmons'
+        elif desintation == 'maingreen':    return 'maingreen'
+        elif destination == 'quietgreen'    return 'quietgreen'
 
 

@@ -1,13 +1,16 @@
-from . globals import Configuration
+from . globals import Configuration, UIDConst
 
 import MySQLdb
 import time
 import os
 import ConfigParser
+from dateutil import parser
+from datetime import datetime
 
 
 """ Database management functions """
 class DBFunc:
+
 
     def __init__(self):
         cfg = ConfigParser.ConfigParser()
@@ -17,6 +20,7 @@ class DBFunc:
             cfg.get("Database","user"), 
             cfg.get("Database","password"),
             cfg.get("Database","database"))
+        self.uid = UID()
 
     ################################
     ### Data retrieval functions ###
@@ -42,6 +46,14 @@ class DBFunc:
             ret.append(val[0])
         return ret
 
+    # inserts a new task into the task table and returns the uid of the task
+    def add_task(self, task):
+        task['uid'] = self._new_uid('task') # generate a new uid for the task
+        keys = ",".join(task.keys())
+        vals = "','".join(task.values())  # joins values with quotes (start & end don't have quotes)
+        sql = "INSERT INTO tasks ({}) VALUES ('{}')".format(keys,vals)
+        if self._query(sql,return_data=False): return task['uid']
+        else: return None
 
     #################################
     ### Database helper functions ###
@@ -63,6 +75,17 @@ class DBFunc:
                 return rows
         cursor.close()
 
+    # generate a new uid and verify that it is unique to that table
+    def _new_uid(self, uid_type):
+        new_uid = self.uid.generate(uid_type)
+        while self._uid_exists(new_uid, uid_type):
+            new_uid = self.uid.generate(uid_type)
+        return new_uid
+
+    # check if a uid exists in the table
+    def _uid_exists(self, uid, table):
+        r = self._query("SELECT uid FROM {} WHERE uid=%s".format(table),(uid,))
+        return len(r) is not 0
 
 """ Generic status print reporting """
 class Status:
@@ -113,9 +136,10 @@ class Get:
 
     def order(self,order_uid):
         return {
+            "uid": order_uid,
             "flavor": self.db.get(order_uid,"flavor","orders"),
             "destination": self.db.get(order_uid,"destination","orders"),
-            "timestamp": self.db.get(order_uid,"timestamp","orders"),
+            "timestamp": parser.parse(self.db.get(order_uid,"timestamp","orders")),
             "departuretime": self.db.get(order_uid,"departuretime","orders"),
             "arrivaltime": self.db.get(order_uid,"arrivaltime","orders"),
             "completed": self.db.get(order_uid,"completed","orders")
@@ -140,11 +164,28 @@ class Set:
     def __init__(self,db):
         self.db = db
 
-    def status(self,uid,new_status):
-        self.db.set(new_status,uid,"status","drones")
+    def task(self,drone_uid,task_uid):
+        self.db.set(task_uid,drone_uid,"task","drones")
 
-    def job(self,uid,new_job=None):
-        self.db.set(new_job,uid,"job","drones")
+    def status(self,drone_uid, status):
+        self.db.set(status, drone_uid, 'status', 'drones')
 
-    def command(self,uid, new_command):
-        self.db.set(new_command,uid,"command","drones")
+    def command(self,drone_uid,new_command):
+        self.db.set(new_command,drone_uid, "command","drones")
+
+""" Generate consistent UIDs """
+class UID:
+    # Generate UID
+    # Example usage: UID.generate("drone") or UID.generate("zone")
+    @classmethod
+    def generate(self,uid_type):
+        randStr = "".join(random.sample(string.hexdigits, int(UIDConst.LENGTH)))
+        if uid_type == "drone":
+            c = UIDConst.DRONE_ID
+        elif uid_type == "tast":
+            c = UIDConst.TAST_ID
+        elif uid_type == "type":
+            c = UIDConst.TYPE_ID
+        elif uid_type == "order":
+            c = UIDConst.ORDER_ID
+        return c + randStr

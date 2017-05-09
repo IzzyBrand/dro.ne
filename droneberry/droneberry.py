@@ -120,7 +120,7 @@ class Drone:
 						upload(self.pixhawk, self.wp_path + '/' + wp_file + '.txt')
 						self.pixhawk.commands.download()
 						self.server.post_mission(wp_file)
-						self.set_action('idle')
+						self.set_action('wait_start')
 
 			elif received_command == self._COMMAND_SHUTDOWN:
 				if not self.pixhawk.armed:
@@ -140,11 +140,11 @@ class Drone:
 				self.set_action('wait_arm')
 			except APIException:
 				print 'commands still downloading.'
-				self.set_action('idle')
+				self.set_action('wait_start')
 
 		elif self.current_action == 'wait_arm' and time.time() - self._arming_window_start > 60:
 			self._log('TIMEOUT - revert to idle')
-			self.set_action('idle')
+			self.set_action('wait_start')
 
 		elif self.current_action == 'arm':
 			self.pixhawk.armed = True
@@ -176,7 +176,7 @@ class Drone:
 		elif self.current_action = 'landing':
 			if self.pixhawk.armed = False:
 				self.gripper.open()
-				self.set_action('idle')
+				self.set_action('disarm')
 			elif self.pixhawk.commands[next_cmd].command == mavutil.mavlink.MAV_CMD_NAV_TAKEOFF:
 				self.gripper.open()
 				self.set_action('flying')
@@ -238,7 +238,7 @@ class Drone:
 			else: self._log('WARNING - Cannot pause while ' + self.current_action)
 
 		elif new_action == 'prearm':
-			if self.current_action == 'idle': self.set_action('prearm')
+			if self.current_action == 'wait_start': self.set_action('prearm')
 			else: self._log('WARNING - Cannot start while ' + self.current_action)
 
 		elif new_action == 'arm':
