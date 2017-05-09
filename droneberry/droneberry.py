@@ -32,7 +32,10 @@ from dronekit import connect, VehicleMode, APIException
 from pymavlink import mavutil
 import sys
 import os
-
+# TODO:
+"""
+ - set departure and arrival times in task so our records are straight
+"""
 
 
 class Drone:

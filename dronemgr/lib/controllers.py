@@ -1,5 +1,6 @@
 from . util import DBFunc, Status, Get, Set
-
+from dateutil import parser
+from datetime import datetime
 import random
 
 
@@ -11,7 +12,7 @@ class Controller:
         Status.out("Connected to database")
         # NOTE: by preloading the drones, we don't allow the manager to handle
         # dynamically adding a new drone to the database
-        self.drone_uids = self.db.get_all("uid","drones")
+        self.drone_uids = self.get.list("uid","drones")
         self.get = Get(self.db)
         self.set = Set(self.db)
         # a list of dicts to store each drone
@@ -33,7 +34,7 @@ class Controller:
 
         # refresh the orders list if there is an idle drone to handle a new task
         if exists_idle_drone: self.orders = map(lambda order_uid: 
-            self.get.order(order_uid), self.db.get_all('uid','orders'))
+            self.get.order(order_uid), self.get.list('uid','orders', completed='0'))
 
         for d in self.drones:
             if d['status'] == 'idle':
@@ -71,6 +72,8 @@ class Controller:
                 # represent that an order is being handled?
                 # BEN Note: The drone itself has a task and the task has a drone (so its redundant)
                 if o['drone_uid'] == '' and (oldest_incomplete_order is None \
+                    
+                # dt = parser.parse("Aug 28 1999 12:00AM")
                 or o['timestamp'] < oldest_incomplete_order['timestamp']):
                         oldest_incomplete_order = o
 

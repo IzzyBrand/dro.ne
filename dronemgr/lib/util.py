@@ -97,25 +97,6 @@ class Get:
             "description": self.db.get(type_uid,"description","types")
         }
 
-    def zone(self,uid):
-        zone_uid = self.db.get(uid,"zone","drones")
-        return {
-            "latitude": self.db.get(zone_uid,"latitude","zones"),
-            "longitude": self.db.get(zone_uid,"longitude","zones"),
-            "altitude": self.db.get(zone_uid,"altitude","zones"),
-            "description": self.db.get(zone_uid,"description","zones")
-        }
-
-    def job(self,uid):
-        job_uid = self.db.get(uid,"job","drones")
-        return {
-            "uid": self.db.get(job_uid,"uid","jobs"),
-            "username": self.db.get(job_uid,"username","jobs"),
-            "flavor": self.db.get(job_uid,"flavor","jobs"),
-            "destination": self.db.get(job_uid,"destination","jobs"),
-            "timestamp": self.db.get(job_uid,"timestamp","jobs")
-        }
-
     def state(self,uid):
         return {
             "command": self.db.get(uid,"command","drones"),
@@ -130,24 +111,27 @@ class Get:
             "description": self.db.get(uid,"description","drones")
         }
 
-    def all(self,uid):
+    def order(self,order_uid):
         return {
-            "position": self.position(),
-            "type": self.type(),
-            "zone": self.zone(),
-            "state": self.state(),
-            "general": self.general()
+            "flavor": self.db.get(order_uid,"flavor","orders"),
+            "destination": self.db.get(order_uid,"destination","orders"),
+            "timestamp": self.db.get(order_uid,"timestamp","orders"),
+            "departuretime": self.db.get(order_uid,"departuretime","orders"),
+            "arrivaltime": self.db.get(order_uid,"arrivaltime","orders"),
+            "completed": self.db.get(order_uid,"completed","orders")
         }
 
-    def order(self,uid):
-        # TODO: this will need to be updated once we clarify exactly what the orders
-        # db structure is. do we have a field for eta? for which drone? for completed?
-        return {
-            'uid': uid,
-            'destination': self.db.get(uid, 'destination', 'orders'),
-            'timestamp': self.db.get(uid, 'timestamp', 'orders')
-            'drone_uid': self.db.get(uid, 'drone_uid', 'orders')
-        }
+    # Return list of all incompleted orders from database (or completed depending on arg flag)
+    def list(self,field,table,completed=None):
+        if not completed:
+            return self.db.get_all(field,table)
+        else:
+            res = self.db._query("SELECT {} FROM {} WHERE completed='{}'".format(field,table,completed),ret_all=True) 
+            ret = []
+            for val in res:
+                ret.append(val[0])
+            return ret
+
 
 
 """ Set information in database """
