@@ -33,7 +33,7 @@ class ServerInterface:
 
 	def get(self, subset=None):
 		if subset: payload = "drone_uid={}&subset={}".format(self.uid, subset)
-		else: payload = "uid={}".format(self.uid)
+		else: payload = "drone_uid={}".format(self.uid)
 		try:
 			response = requests.get(self.api_url, params=payload)
 			if response.status_code - 200 < 10:

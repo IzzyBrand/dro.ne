@@ -39,7 +39,8 @@ import os
 
 
 class Drone:
-	_COMMAND_SET_MISSION 	= 'updatemission'
+        _COMMAND_ADVANCE_MISSION        = 'advancemission'
+	_COMMAND_SET_MISSION 	        = 'updatemission'
 	_COMMAND_START			= 'start'
 	_COMMAND_TAKEOFF 		= 'takeoff'
 	_COMMAND_LAND 			= 'land'
@@ -49,8 +50,8 @@ class Drone:
 
 	def start(self):
 		self.server = ServerInterface()
-		self.pixhawk = connect('/dev/cu.usbmodem1', baud = 115200, wait_ready=True) 	# for on mac via USB
-		# self.pixhawk = connect('/dev/ttyS0', baud = 57600, wait_ready=True) 			# for on the raspberry PI via telem2
+		# self.pixhawk = connect('/dev/cu.usbmodem1', baud = 115200, wait_ready=True) 	# for on mac via USB
+		self.pixhawk = connect('/dev/ttyS0', baud = 57600, wait_ready=True) 			# for on the raspberry PI via telem2
 		# # self.pixhawk = connect('/dev/tty.usbserial-DA00BL49', baud = 57600)			# telem radio on mac
 		# # self.pixhawk = connect('/dev/tty.SLAB_USBtoUART', baud = 57600)				# telem radio on mac
 		#self.pixhawk.wait_ready(timeout=60)
@@ -96,7 +97,7 @@ class Drone:
 
 		# ACT ON NEW COMMAND COMMAND
 		if received_command != self._prev_command:
-			self._log('received command - ' + received_command)
+			self._log('received command - ' + str(received_command))
 
 			if received_command == self._COMMAND_START:
 				self.flow_action('prearm')
@@ -117,11 +118,18 @@ class Drone:
 					if wp_file != None:
 						wp_to_load = self.wp_path + '/' + wp_file + '.txt'
 						# TODO: figure out how to error check command upload
+						mission_to_upload = self.pixhawk, self.wp_path + '/' + wp_file + '.txt'
+						print 'Preparing to upload', mission_to_upload
 						upload(self.pixhawk, self.wp_path + '/' + wp_file + '.txt')
 						self.pixhawk.commands.download()
 						self.server.post_mission(wp_file)
-						self.set_action('wait_start')
+						self.set_action('idle')
+					else: print 'ERROR: Failed to get wp file name'
 
+                        elif received_command == self._COMMAND_ADVANCE_MISSION:
+                                if self.current_action == 'idle':
+                                        self.set_action('taskme')
+                                else: self._log('WARNING - Cannot advance task while ' + self.current_action)
 			elif received_command == self._COMMAND_SHUTDOWN:
 				if not self.pixhawk.armed:
 					self.stop()
@@ -140,11 +148,11 @@ class Drone:
 				self.set_action('wait_arm')
 			except APIException:
 				print 'commands still downloading.'
-				self.set_action('wait_start')
+				self.set_action('idle')
 
 		elif self.current_action == 'wait_arm' and time.time() - self._arming_window_start > 60:
 			self._log('TIMEOUT - revert to idle')
-			self.set_action('wait_start')
+			self.set_action('idle')
 
 		elif self.current_action == 'arm':
 			self.pixhawk.armed = True
@@ -173,8 +181,8 @@ class Drone:
 		# gripper on the takeoff waypoint so we release the box just before we leave the ground.
 		# if there is no takeoff waypoint and the pixhawk disarms, open the gripper anyway just to
 		# be safe
-		elif self.current_action = 'landing':
-			if self.pixhawk.armed = False:
+		elif self.current_action == 'landing':
+			if not self.pixhawk.armed:
 				self.gripper.open()
 				self.set_action('disarm')
 			elif self.pixhawk.commands[next_cmd].command == mavutil.mavlink.MAV_CMD_NAV_TAKEOFF:
@@ -238,7 +246,7 @@ class Drone:
 			else: self._log('WARNING - Cannot pause while ' + self.current_action)
 
 		elif new_action == 'prearm':
-			if self.current_action == 'wait_start': self.set_action('prearm')
+			if self.current_action == 'idle': self.set_action('prearm')
 			else: self._log('WARNING - Cannot start while ' + self.current_action)
 
 		elif new_action == 'arm':
