@@ -9,10 +9,10 @@
 }
 #landing-page-content {
     /*position: fixed;*/
-    top: 50%;
-    left: 50%;
-    width: 80%;
-    height: 290px;
+    top: 52%;
+    left: 55%;
+    width: 70%;
+    height: 350px;
     /*border: solid 1px;*/
     background-color: whitesmoke;
     opacity: .85;
@@ -24,10 +24,13 @@
 }
 .landing-page-input {}
 .landing-page-logo {
-    margin-top: 15px;
-    margin-bottom: 15px;
-    width: 150px;
-    height: 150px;
+    margin-top: 25px;
+    margin-bottom: 5px;
+    /*width: 150px;*/
+    height: 175px;
+}
+.signin-btn {
+    margin-top: -5px;
 }
 
 /*MapBox Front-end display*/
@@ -104,6 +107,7 @@
 }
 #place-order {
     position: absolute;
+    display: none;
     bottom: 70px;
     left: 50%;
     width: 150px;
@@ -114,7 +118,6 @@
     z-index: 100;
 }
 #place-order-button {
-    display: none;
     border-radius: 5px;
     padding-top: 10px;
     padding-bottom: 10px;

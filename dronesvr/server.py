@@ -1,6 +1,6 @@
 from lib.controllers import Controller
 from lib.api import API
-from lib.globals import Configuration, Database
+from lib.globals import Configuration, Database, Inject
 
 import ConfigParser
 import os
@@ -20,7 +20,9 @@ def get_app(conf):
         "server.socket_port":   Configuration.SOCKET_PORT,
         "server.thread_pool":   Configuration.THREAD_POOL,
         "log.error_file":       Configuration.ERROR_LOG_PATH,
-        "log.access_file":      Configuration.ACCESS_LOG_PATH
+        "log.access_file":      Configuration.ACCESS_LOG_PATH,
+        "error_page.404":       error_404,
+        "error_page.500":       error_500
     }
     cherrypy.config.update(global_config)
     return cherrypy.tree
@@ -40,6 +42,23 @@ def secure_headers():
     headers["x-xss-protection"] = "1; mode=block"
     headers["x-content-type-options"] = "nosniff"
 
+def error_404(status,message,traceback,version):
+    return Inject.INDEX_REDIRECT
+    
+def error_500(status,message,traceback,version):
+    error_data = {
+        "code": code,
+        "status": status,
+        "message": message,
+        "traceback": traceback,
+        "version": version
+    }
+    print "###### AN ERROR OCCURRED ######"
+    print status
+    print message
+    print "###############################"
+    return Inject.INDEX_REDIRECT
+
 def start():
     get_app(Configuration.CONFIG_PATH)
     cherrypy.tools.secureheaders = cherrypy.Tool("before_finalize", secure_headers, priority=60)
@@ -48,20 +67,7 @@ def start():
     cherrypy.engine.start()
     cherrypy.engine.block()
 
-def print_pid(path):
-    pid = os.getpid()
-    try:
-        pidfile = open(path,"wb")
-        output = "dronemgrpid='" + str(pid) + "'"
-        pidfile.write(output)  # write PID to text file
-    finally:
-        try:
-            pidfile.close()
-        except:
-            pass
-
 
 
 if __name__ == "__main__":
-    print_pid(Configuration.SERVER_PID_PATH)  # save Python PID
     start()

@@ -5,59 +5,61 @@ class Configuration:
     THREAD_POOL = 12
     ERROR_LOG_PATH = "log/error.log"
     ACCESS_LOG_PATH = "log/access.log"
-    SERVER_PID_PATH = "log/pid.log"
+
+# Generic Javascript HTML injection
+class Inject:
+    # Redirect user to site root (useful for 404 or 500 errors)
+    INDEX_REDIRECT = "<html><body><script>window.location.replace('/');</script></body></html>"
 
 class App:
     INFO = {
-        "name": "LunaDrop",
+        "name": "lunadrop",
         "version": "v1.0",
-        "authors": "Benjamin Shanahan, Isaiah Brand",
+        "authors": "Benjamin Shanahan & Isaiah Brand",
         "author_emails": "benjamin_shanahan@brown.edu, brand@brown.edu",
         "full_url": "http://lunadrop.com/",
         "short_url": "lunadrop.com",
-        "description": "LunaDrop Autonomous Delivery",
-        "long_description": """LunaDrop Autonomous Delivery System"""
+        "description": "Autonomous Drone Delivery",
+        "long_description": """lunadrop Autonomous Drone Delivery System"""
     }
 
 class Database:
     DRONES_TABLE = "drones"
-    ZONES_TABLE = "zones"
     TYPES_TABLE = "types"
     ORDERS_TABLE = "orders"
     TASKS_TABLE = "tasks"
     USERS_TABLE = "user"
 
+class Authentication:
+    CLIENT_ID = "680157324579-1ugiegjdfjqula183h6933tntfsrs7ph.apps.googleusercontent.com"
+    ALLOWED_USER_DOMAIN = "@brown.edu"  # only allow @brown.edu Google users
+
 class UIDConst:
     LENGTH = 7  # total length, NOT including hardcoded values below
     DRONE_ID = "D"  # at beginning of each drone UID
-    ZONE_ID = "Z"  # at beginning of each zone UID
     TYPE_ID = "T"  # at beginning of each type UID
     ORDER_ID = "O"  # at beginning of each order UID  
     TASK_ID = "K"  # at beginning of each task UID
-    USER_ID = "U"  # at beginning of each user UID
 
 class Pages:
     # Path to template file
     TEMPLATE = {
         "index": "view/page/index.html",
         "about": "view/page/about.html",
-        "demo": "view/page/demo.html",
-        "auth": "view/page/auth.html",
-        "super": "view/page/super.html",
-        "admin": "view/page/admin.html"
+        "account": "view/page/account.html",
+        "demo": "view/page/demo.html"
     }
     # URL to page
     URL = {
         "index": "/",
         "about": "/about",
-        "demo": "/demo",
-        "auth": "/auth",
-        "super": "/super",
-        "admin": "/admin"
+        "account": "/account",
+        "demo": "/demo"
     }
 
 class Session:
-    AUTH_KEY = "_username"
+    USERID = "_userid"
+    NAME = "_name"
 
 class Errors:
     GENERIC = {

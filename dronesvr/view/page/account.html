@@ -1,0 +1,114 @@
+{% extends "view/base.html" %}
+
+{% set active_page = "account" %}
+
+{% block header %}
+<div class="page-title">Welcome, {{name}}</div>
+{% endblock %}
+
+{% block content %}
+
+<div style="margin-top:-20pt;" class="container">
+
+    {% if usertype >= 1 %}
+    <!-- Administrative interface -->
+    <script>
+        $( function() {
+            $( "#accordion" ).accordion({
+                heightStyle: "content"
+            });
+        } );
+    </script>
+    <div class="row row-spacing">
+        <h3>Manage Drones <span class="badge" id="n-drones">1</span></h3>
+        <div id="accordion">
+
+            {% for uid in drone_uids %}
+            {% set uid = uid[0] %}
+            <h3 class="accordion-header">
+                <span id="{{uid}}-name" class="name">{{uid}}</span>
+                <span class="header">
+                    <span class="header-entry">Cmd: </span>
+                    <span class="header-value" id="{{uid}}-command">unset</span>
+                    <span class="header-entry">| Sts: </span>
+                    <span class="header-value" id="{{uid}}-status">unset</span>
+                </span>
+            </h3>
+            <div id="{{uid}}-div">
+                <div class="row row-spacing">
+                    <div class="col-xs-4 entry">Delivery contains:</div>
+                    <div class="col-xs-8 value" id="{{uid}}-contains">unset</div>
+                </div>
+                <div class="row row-spacing">
+                    <div class="col-xs-4 entry">Active mission:</div>
+                    <div class="col-xs-8 value" id="{{uid}}-activemission">unset</div>
+                </div>
+                <div class="row row-spacing">
+                    <div class="col-xs-4 entry">Errors:</div>
+                    <div class="col-xs-8 value" id="{{uid}}-error">unset</div>
+                </div>
+                <div class="row row-spacing button-container">
+                    <div class="col-xs-12 col-sm-3 centered">
+                        <button id="{{uid}}-button-start" onclick="onButtonClick('{{uid}}','start')">Start</button>
+                        <!-- <input id="{{uid}}-button-start" data-toggle="toggle" data-on="Armed" data-off="Disarmed" data-height="45px" data-width="100%" type="checkbox"> -->
+                    </div>
+                    <div class="col-xs-12 col-sm-3 centered">
+                        <button id="{{uid}}-button-takeoff" onclick="onButtonClick('{{uid}}','takeoff')">Takeoff</button>
+                    </div>
+                    <div class="col-xs-12 col-sm-3 centered">
+                        <button id="{{uid}}-button-rtl" onclick="onButtonClick('{{uid}}','rtl')">RTL</button>
+                    </div>
+                    <div class="col-xs-12 col-sm-3 centered">
+                        <button id="{{uid}}-button-advancemission" onclick="onButtonClick('{{uid}}','advancemission')">Advance Mission</button>
+                    </div>
+                </div>
+                <!-- <div class="row row-spacing button-container">
+                    <div class="col-xs-4 centered" id="{{uid}}-button-approvelanding">
+                        <input id="{{uid}}-switch-approvelanding" data-toggle="toggle" data-on="Approve Landing" data-off="Disallow Landing" data-height="45px" data-width="100%" type="checkbox">
+                    </div>
+                </div> -->
+            </div>
+            {% endfor %}
+
+        </div>
+    </div>
+
+    <script src="/static/js/account.js"></script>
+    {% endif %}
+
+
+
+    {% if usertype >= 2 %}
+    <div class="row row-spacing">
+        <h3>Manage Users <span class="badge" id="n-active-users"></span></h3>
+        <ul>
+            Not yet implemented.
+        </ul>
+    </div>
+
+    <div class="row row-spacing">
+        <h3>Extras</h3>
+        <ul>
+            <li><a href="/demo">Robot Block Party Demo</a></li>
+        </ul>
+    </div>
+    {% endif %}
+
+
+    <div class="row row-spacing">
+        <h3>My Orders <span class="badge" id="my-active-orders"></span></h3>
+        <ul>
+            No active drones.
+        </ul>
+    </div>
+
+    <div class="row row-spacing">
+        <h3>Manage Account</h3>
+        <ul>
+            <li><a href="#" onclick="signOut()">Sign out</a></li>
+        </ul>
+    </div>
+
+</div>
+
+{% endblock %}

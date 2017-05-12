@@ -3,13 +3,72 @@
 {% set active_page = "about" %}
 
 {% block header %}
-<div class="page-title">About {{info["name"]}}</div>
+<div class="page-title"><span style="font-size: 17.5pt;">About</span> <span class="luna">{{info["name"]}}</span></div>
 {% endblock %}
 
 {% block content %}
 
-<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed ut tortor orci. Donec consectetur lobortis tincidunt. Etiam ut justo volutpat, pharetra lorem nec, aliquet sem. Fusce vulputate nibh eget eleifend pellentesque. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Ut vestibulum bibendum velit et ultricies. Vestibulum malesuada eros in augue sodales dignissim. Suspendisse laoreet ullamcorper arcu nec porta.</p>
+<div style="margin-top:-20pt;" class="container">
 
-<p>Duis orci leo, consectetur quis accumsan molestie, bibendum luctus urna. Sed id justo mattis, vehicula ligula posuere, viverra tortor. Sed accumsan dolor at sem sagittis vestibulum. Maecenas eget lacus non odio vulputate tincidunt. Maecenas et arcu eu metus congue cursus sed in purus. In mollis sagittis turpis bibendum iaculis. Etiam est massa, pretium sed neque vitae, pretium rhoncus erat. Vivamus accumsan magna eu felis cursus porta. Morbi venenatis cursus dolor, eu pretium lectus faucibus id. Suspendisse augue mauris, laoreet non dapibus nec, vulputate maximus sem. Nulla molestie enim sit amet lorem tempor mattis. Donec egestas accumsan turpis non mollis. In quis magna venenatis, blandit sem eu, faucibus lectus. Nullam gravida eget risus ut fringilla. Etiam a tellus elementum quam imperdiet fringilla. Aliquam fermentum quis nulla sit amet blandit.</p>
+    <div class="row row-spacing">
+        <h3>What is it?</h3>
+        <div>
+            <span class="luna">lunadrop</span> is a comprehensive drone delivery system. Immediately after you place an order on our website, we pack everything up for you and strap the items to one of our <span class="luna">luna</span> drones. The drone flies autonomously from our central hub to the your requested landing site, safely descends to drop off your package, and flies back to our central hub where it awaits the next order.
+        </div>
+    </div>
+
+    <div class="row row-spacing">
+        <div class="embed-responsive embed-responsive-16by9">
+            <iframe src="https://www.youtube.com/embed/Rt-q0L54g0c" frameborder="0" allowfullscreen></iframe>
+        </div>
+    </div>
+
+    <div class="row row-spacing">
+        <h3>How does it work?</h3>
+        <div>The <span class="luna">lunadrop</span> project can best be broken down into three main parts.</div>
+    </div>
+    <div class="row row-spacing">
+        <div class="col-sm-4">
+            <h4>The Website</h4>
+            <img src="/static/img/website.png" class="img-responsive" />
+            <p><span class="luna">lunadrop.com</span> and the web server sitting behind it are the portal to rapid autonomous drone delivery. We have built an intuitive and mobile-friendly web interface that allows you to easily place an order and watch your drone's progress as it flies to you in real-time.</p>
+        </div>
+
+        <div class="col-sm-4">
+            <h4>The Drones</h4>
+            <img src="/static/img/drone.png" class="img-responsive" />
+            <p><span class="luna">lunadrop</span> autonomous delivery vehicles are custom unmanned aerial systems. Each drone is outfitted with our custom package gripper designed and built at Brown University. An open source, ARM-based flight controller in union with an onboard Linux computer allow the drone to communicate with our server over WiFi or LTE and navigate autonomously.</p>
+        </div>
+
+        <div class="col-sm-4">
+            <h4>The Manager</h4>
+            <img src="/static/img/manager.png" class="img-responsive" />
+            <p>The Manager is the brain of the system. It recieves your order from the server and intelligently assigns it to an available drone, all while taking into account factors such as distance, remaining battery life, and payload weight. After generating a flight plan and dispatching a drone, it actively monitors its in-flight performance, location, and status throughout the duration of its flight.</p>
+        </div>
+    </div>
+
+    <div class="row row-spacing">
+        <h3>Who's behind it?</h3>
+        <p><span class="luna">lunadrop</span> is the brain-child of three current undergraduate students studying at Brown University.</p>
+    </div>
+    <div class="row row-spacing">
+        <div class="col-sm-4">
+            <h4>Benjamin Shanahan</h4>
+            <img src="/static/img/ben.jpg" class="img-responsive" />
+            <p>Ben is currently a senior studying Neuroscience at Brown. He is involved in the development of the server front and back-end, as well as assembly and hardware prototyping for the <span class="luna">luna</span> drones.</p>
+        </div>
+        <div class="col-sm-4">
+            <h4>Isaiah Brand</h4>
+            <img src="/static/img/izzy.jpg" class="img-responsive" />
+            <p>Izzy is a sophomore studying Computer Science at Brown. He is largely involved in work on hardware and individual drone logic, as well as designing intelligent state flow for the drone manager system.</p>
+        </div>
+        <div class="col-sm-4">
+            <h4>Nathan Amin</h4>
+            <img src="/static/img/nathan.jpg" class="img-responsive" />
+            <p>Nathan is a sophomore studying Mechanical Engineering and has worked on the development of the gripper mechanism for the <span class="luna">luna</span> drones.</p>
+        </div>
+    </div>
+
+</div>
 
 {% endblock %}
