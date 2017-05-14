@@ -1,0 +1,69 @@
+How to configure Huawei E397 for Raspbian Distro
+Benjamin Shanahan
+lunadrop.com
+
+
+*******************************************************************************
+***  Configuring Huawei 3G Modem on Raspbian                                  *
+*******************************************************************************
+(https://www.thefanclub.co.za/how-to/how-setup-usb-3g-modem-raspberry-pi-using-usbmodeswitch-and-wvdial)
+
+Follow steps 1 and 2. For step 3, see 'Configuring usb_modeswitch'.
+
+
+*******************************************************************************
+***  Configuring usb_modeswitch                                               *
+*******************************************************************************
+(http://www.draisberghof.de/usb_modeswitch/bb/viewtopic.php?t=708)
+
+Verify that device code is '12d1:1506'
+    $ lsusb
+
+    Bus 001 Device 005: ID 12d1:1506 Huawei Technologies Co., Ltd. E398 LTE/UMTS/GSM Modem/Networkcard
+
+Run the following:
+    $ sudo nano /etc/usb_modeswitch.d/12d1\:1506
+
+Paste the following and save:
+    DefaultVendor= 0x12d1
+    DefaultProduct=0x1506
+    MessageContent="55534243f066fe892400000080000612000000240000000000000000000000"
+
+Write the new file to usb_modeswitch configuration:
+    $ sudo usb_modeswitch -I -W -c /etc/usb_modeswitch.d/12d1\:1506 
+    $ sudo reboot
+
+When the system comes back up, verify that the device ID is different (it should now be 12d1:1505)
+    $ lsusb
+Unplug / replug modem:
+    $ lsusb (it should have changed)
+
+Edit usb_modeswitch conf file
+   $ sudo nano /etc/usb_modeswitch.conf
+And add the following:
+    DefaultVendor=0x12d1
+    DefaultProduct=0x1506
+    TargetVendor=0x12d1
+    TargetProduct=0x1505
+    MessageContent="55534243f066fe892400000080000612000000240000000000000000000000"
+^ I don't think this is necessary unless you want to manually use usb_modeswitch
+
+
+*******************************************************************************
+***  Configuring wvdial                                                       *
+*******************************************************************************
+Edit wvdial conf file
+    $ sudo nano /etc/wvdial.conf
+Add the following:
+    Init3 = AT+CGDCONT=1,"IP","internet"
+Also, verify that modem is connected to /dev/gsmmodem
+    $ dmesg
+    $ cd /dev (see if /dev/gsmmodem exists)
+
+
+*******************************************************************************
+***  Connect to internet                                                      *
+*******************************************************************************
+(don't necessarily run the first command (if the usb device is already mode switched))
+    $ sudo usb_modeswitch -c /etc/usb_modeswitch.conf
+    $ wvdial
