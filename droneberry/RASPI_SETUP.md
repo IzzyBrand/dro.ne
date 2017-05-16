@@ -14,7 +14,7 @@
 sudo apt-get update
 sudo apt-get upgrade
 sudo apt-get install vim python-pip python-dev libxml2-dev libxslt-dev
-sudo pip install monotonic future mavproxy dronekit pyserial pymavlink 
+sudo pip install requests monotonic future mavproxy dronekit pyserial pymavlink 
 ```
 
 ## DRONEKIT

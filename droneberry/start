@@ -1,0 +1,3 @@
+sudo screen -dmSL droneberry "./init_droneberry" > /tmp/screen_out_droneberry.txt
+echo "Started droneberry."
+sudo screen -list
