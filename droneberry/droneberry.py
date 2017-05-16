@@ -182,6 +182,7 @@ class Drone:
 		# if there is no takeoff waypoint and the pixhawk disarms, open the gripper anyway just to
 		# be safe
 		elif self.current_action == 'landing':
+			next_cmd = self.pixhawk.commands.next
 			if not self.pixhawk.armed:
 				self.gripper.open()
 				self.set_action('disarm')
