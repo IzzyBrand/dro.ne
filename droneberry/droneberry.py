@@ -104,7 +104,7 @@ class Drone:
 			elif received_command == self._COMMAND_TAKEOFF:
 				self.flow_action('arm')
 			elif received_command == self._COMMAND_LAND:
-				if self.current_action == 'wait_land':
+				if self.current_action == 'wait_land' or self.current_action == 'wait_land_hub':
 					self.pixhawk.commands.next += 1 # advance to the landing waypoint
 					self.set_action('landing')
 				else: self._log('WARNING - Cannot land while ' + self.current_action)
@@ -171,12 +171,32 @@ class Drone:
 
 		elif self.current_action == 'flying':
 			next_cmd = self.pixhawk.commands.next
-			print next_cmd, self.pixhawk.commands[next_cmd].command
-			# TODO - Determine if this should be mavutil.mavlink.MAV_CMD_NAV_LAND instead?
-			if self.pixhawk.commands[next_cmd].command == mavutil.mavlink.MAV_CMD_NAV_LAND:
-				# we've reached the loiter waypoint
-				self.set_action('wait_land')
+			if next_cmd > 0 and next_cmd < len(self.pixhawk.commands):
+				current_wp = self.pixhawk.commands[next_cmd - 1].command
+				print 'FLYING MISSION - index {}\twp_type {}'.format(next_cmd, current_wp)
+				
+				if current_wp == mavutil.mavlink.MAV_CMD_NAV_LOITER_UNLIM:
+					# we've reached the loiter waypoint before landing at the customer
+					self.set_action('wait_land')
+				elif current_wp == mavutil.mavlink.MAV_CMD_NAV_LOITER_TIME:
+					# waypoint before landing at the hub
+					self.set_action('wait_land_hub')
+				elif current_wp == mavutil.mavlink.MAV_CMD_NAV_LAND:
+					self._log('WARNING - LAND waypoint without LOITER.')
+					self.set_action('landing')
 
+		elif self.current_action == 'wait_land_hub':
+			next_cmd = self.pixhawk.commands.next
+			if next_cmd > 0 and next_cmd < len(self.pixhawk.commands):
+				current_wp = self.pixhawk.commands[next_cmd - 1].command
+				print 'WAIT LAND HUB - index {}\twp_type {}'.format(next_cmd, current_wp)
+				if current_wp == mavutil.mavlink.MAV_CMD_NAV_LAND:
+					self._log('WAIT_LAND_HUB - proceeded to landing.')
+					self.set_action('landing')
+				if current_wp != mavutil.mavlink.MAV_CMD_NAV_LOITER_UNLIM:
+					self._log('WAIT_LAND_HUB - proceeded to flying.')
+					self.set_action('flying')
+					
 		# if there is a consectutive land followed by a takeoff waypoint, then we actuate the 
 		# gripper on the takeoff waypoint so we release the box just before we leave the ground.
 		# if there is no takeoff waypoint and the pixhawk disarms, open the gripper anyway just to
@@ -206,7 +226,10 @@ class Drone:
 			self.pixhawk.mode = VehicleMode('RTL')
 			self.set_action('rtl')
 
-		elif (self.current_action == 'rtl' or self.current_action == 'loiter') \
+		if (self.current_action == 'rtl' \
+			or self.current_action == 'loiter' \
+			or self.current_action == 'landing' \
+			or self.current_action == 'flying') \
 		and not self.pixhawk.armed:
 			self._log('Detected disarm while ' + self.current_action + '. Changing to idle.')
 			self.set_action('idle')
