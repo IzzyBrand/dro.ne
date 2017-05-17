@@ -173,7 +173,7 @@ class Drone:
 			next_cmd = self.pixhawk.commands.next
 			print next_cmd, self.pixhawk.commands[next_cmd].command
 			# TODO - Determine if this should be mavutil.mavlink.MAV_CMD_NAV_LAND instead?
-			if self.pixhawk.commands[next_cmd].command == mavutil.mavlink.MAV_CMD_NAV_LOITER_UNLIM:
+			if self.pixhawk.commands[next_cmd].command == mavutil.mavlink.MAV_CMD_NAV_LAND:
 				# we've reached the loiter waypoint
 				self.set_action('wait_land')
 
@@ -184,10 +184,12 @@ class Drone:
 		elif self.current_action == 'landing':
 			next_cmd = self.pixhawk.commands.next
 			if not self.pixhawk.armed:
-				self.gripper.open()
+				print 'GRIPPER OPEN'
+				#self.gripper.open()
 				self.set_action('disarm')
-			elif self.pixhawk.commands[next_cmd].command == mavutil.mavlink.MAV_CMD_NAV_TAKEOFF:
-				self.gripper.open()
+			elif self.pixhawk.commands[next_cmd-1].command == mavutil.mavlink.MAV_CMD_NAV_TAKEOFF:
+				print 'GRIPPER OPEN'
+				#self.gripper.open()
 				self.set_action('flying')
 
 		elif self.current_action == 'disarm': 
