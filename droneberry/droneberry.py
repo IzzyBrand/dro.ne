@@ -44,6 +44,7 @@ class Drone:
 	_COMMAND_START			= 'start'
 	_COMMAND_TAKEOFF 		= 'takeoff'
 	_COMMAND_LAND 			= 'land'
+	_COMMAND_LAND_HUB 		= 'land_hub'
 	_COMMAND_PAUSE			= 'pause'
 	_COMMAND_RTL 			= 'rtl'
 	_COMMAND_SHUTDOWN		= 'shutdown'
@@ -104,8 +105,13 @@ class Drone:
 			elif received_command == self._COMMAND_TAKEOFF:
 				self.flow_action('arm')
 			elif received_command == self._COMMAND_LAND:
-				if self.current_action == 'wait_land' or self.current_action == 'wait_land_hub':
+				if self.current_action == 'wait_land':
 					self.pixhawk.commands.next += 1 # advance to the landing waypoint
+					self.set_action('landing')
+				else: self._log('WARNING - Cannot land while ' + self.current_action)
+			elif received_command == self._COMMAND_LAND_HUB:
+				if self.current_action = 'wait_land_hub':
+					self.pixhawk.command.next += 1 # advance to the landing waypoint
 					self.set_action('landing')
 				else: self._log('WARNING - Cannot land while ' + self.current_action)
 			elif received_command == self._COMMAND_RTL:
