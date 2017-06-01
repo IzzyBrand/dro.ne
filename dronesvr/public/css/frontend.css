@@ -8,12 +8,10 @@
     height: 100%;
 }
 #landing-page-content {
-    /*position: fixed;*/
     top: 52%;
     left: 55%;
     width: 70%;
     height: 350px;
-    /*border: solid 1px;*/
     background-color: whitesmoke;
     opacity: .85;
     margin-left: -40%;
@@ -22,11 +20,18 @@
     border: solid 3px white;
     border-radius: 5px;
 }
-.landing-page-input {}
+.landing-page-input {
+    height: 40px;
+    font-family: "Comfortaa", cursive;
+}
+.landing-page-option {}
+.landing-page-btn {
+    font-weight: bold;
+    color: #39bacf;
+}
 .landing-page-logo {
     margin-top: 25px;
     margin-bottom: 5px;
-    /*width: 150px;*/
     height: 175px;
 }
 .signin-btn {

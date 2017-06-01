@@ -15,6 +15,7 @@ DB = DBFunc()
 
 # Names of database tables
 DRONES = Database.DRONES_TABLE
+ORDERS = Database.ORDERS_TABLE
 TYPES = Database.TYPES_TABLE
 
 """
@@ -28,7 +29,7 @@ class Controller(object):
     # Site index
     @cherrypy.expose
     def index(self):
-        tmpl = Environment(loader=FileSystemLoader(".")).get_template(Pages.TEMPLATE["index"])
+        tmpl = Environment(loader=FileSystemLoader(".")).get_template(Pages.TEMPLATE["map"])
         page_data = self._get_page_data()
         return tmpl.render(page_data)
     # About page
@@ -46,7 +47,8 @@ class Controller(object):
             tmpl = Environment(loader=FileSystemLoader(".")).get_template(Pages.TEMPLATE["account"])
             return tmpl.render(page_data)  # render page
         else:
-            raise Web.redirect(Pages.URL["index"])  # reject user access
+            cherrypy.response.status = 401  # Unauthorized
+            raise Web.redirect(Pages.URL["map"])  # reject user access
 
     """ Functional endpoints """
     # Login endpoint (checks POSTed credentials and then redirects)
@@ -54,7 +56,7 @@ class Controller(object):
     @cherrypy.expose
     def login(self, token=None):
         if token is None:
-            Web.redirect(Pages.URL["index"])  # reject user login
+            Web.redirect(Pages.URL["map"])  # reject user login
         else:
             try:
                 client_id = Authentication.CLIENT_ID
@@ -63,18 +65,21 @@ class Controller(object):
                     raise crypt.AppIdentityError("Wrong issuer.")  # reject user login
             except crypt.AppIdentityError:
                 # Invalid token
-                raise Web.redirect(Pages.URL["index"])  # reject user login
+                cherrypy.response.status = 401  # Unauthorized
+                raise Web.redirect(Pages.URL["map"])  # reject user login
             # Verify that domain belongs to @brown.edu
             domain = re.search("@[\w.]+",idinfo["email"])
             if domain.group() != Authentication.ALLOWED_USER_DOMAIN:
                 # Reject user & wipe session data (just in case)
                 cherrypy.session[Session.USERID] = ""
                 cherrypy.session[Session.NAME] = ""
-                raise Web.redirect(Pages.URL["index"])
+                cherrypy.response.status = 401  # Unauthorized
+                raise Web.redirect(Pages.URL["map"])
             # check client_id and allow authentication if it matches
             if idinfo['aud'] == client_id:
                 # token is valid and intended for client
                 # get unique Google ID for user
+                print idinfo
                 userid = idinfo['sub']
                 cherrypy.session[Session.USERID] = userid  # unique google user id
                 cherrypy.session[Session.NAME] = idinfo['name']
@@ -83,36 +88,43 @@ class Controller(object):
                     DB.add_new_user(userid,idinfo['name'],idinfo['email'])
                 return idinfo['name']
             else:
-                raise Web.redirect(Pages.URL["index"])  # reject user login
+                cherrypy.response.status = 401  # Unauthorized
+                raise Web.redirect(Pages.URL["map"])  # reject user login
     @cherrypy.expose
     def logout(self):
         cherrypy.session[Session.USERID] = None
         cherrypy.session[Session.NAME] = None
-        raise Web.redirect(Pages.URL["index"])
+        raise Web.redirect(Pages.URL["map"])
     # Add new delivery job (this is an AJAX endpoint)
     @cherrypy.expose
-    def addorder(self,flavor=None,destination=None):
+    def addorder(self,contains=None,destination=None):
         userid = cherrypy.session.get(Session.USERID)
         if DB.check_permissions(userid,0) and \
-           flavor is not None and destination is not None:
+           contains is not None and destination is not None:
             # TODO: determine that flavor and destination 
             # values are valid (match pre-existing values)
             # Determine that user has not already queued a job
             if DB.user_can_queue(userid):  # make sure user can queue a job!
-                orderid = UID.generate("order")
+                orderid = UID.generate("order")  # generate random job UID
+                queuetime = Timestamp.now(return_str=False)
+                arrivetime = Timestamp.add_time(queuetime,minutes=15,return_str=False)
                 new_order = {
-                    "uid": orderid,  # generate random job UID
+                    "uid": orderid,
                     "userid": userid,
-                    "flavor": flavor,
+                    "contains": contains,
                     "destination": destination,
+                    "departuretime": "Has not departed.",
+                    "arrivaltime": Timestamp.format(arrivetime),
                     "timestamp": Timestamp.now()
                 }
                 r1 = DB.add_order(new_order)
                 r2 = DB.update_user_order(userid,orderid)
                 return json.dumps({"success":True,"message":"Congrats! Your donut order will soon be on its way."})
             else:
-                return json.dumps({"success":False,"message":"Sorry, you've already requested a donut!"})
-        raise Web.redirect(Pages.URL["index"])
+                return json.dumps({"success":False,"message":"Sorry, you've already requested a donut!\nCheck out your current orders on the Account page."})
+        else:
+            cherrypy.response.status = 401  # Unauthorized
+            raise Web.redirect(Pages.URL["map"])
     # Internet Connectivity Demo
     @cherrypy.expose
     def demo(self):
@@ -122,7 +134,8 @@ class Controller(object):
             page_data = self._get_page_data()
             return tmpl.render(page_data)
         else:
-            raise Web.redirect(Pages.URL["index"])
+            cherrypy.response.status = 401  # Unauthorized
+            raise Web.redirect(Pages.URL["map"])
     # Note: we don't use the API is so that the auth-key
     # for the drone remains concealed (if we do stuff server-side and 
     # directly interface with the database, we don't need it)
@@ -136,7 +149,23 @@ class Controller(object):
                 drone_name = DB.get("name","drones",drone_uid)
                 return "%s set to %s" % (drone_name,command)
         else:
-            raise Web.redirect(Pages.URL["index"])
+            cherrypy.response.status = 401  # Unauthorized
+            raise Web.redirect(Pages.URL["map"])
+    # Get information specific to current user's orders
+    # This requires the user to be logged in
+    @cherrypy.expose
+    def get_order_uids(self):
+        userid = cherrypy.session.get(Session.USERID)
+        if userid is not None and DB.check_permissions(userid,0):
+            uids = DB.get_all_where("uid",ORDERS,"userid",userid,"completed","0")
+            ret = {"order_uids":[]}
+            for u in uids:
+                ret["order_uids"].append(u[0])
+            cherrypy.response.status = 200  # OK
+            return json.dumps(ret)
+        else:
+            cherrypy.response.status = 401  # Unauthorized
+            raise Web.redirect(Pages.URL["map"])
 
     """ Helper functions """
     # Return page_data dict to pass to Jinja template
@@ -150,12 +179,12 @@ class Controller(object):
             page_data["usertype"] = DB.get_user_info("type",userid)
             page_data["name"] = DB.get_user_info("name",userid)
             page_data["email"] = DB.get_user_info("email",userid)
-            page_data["order"] = DB.get_user_info("order",userid)
+            page_data["order_uid"] = DB.get_user_info("order",userid)
             page_data["drone_uids"] = DB.get_all("uid",DRONES)
         else:
-            page_data["userid"] = ""
+            page_data["userid"] = None
             page_data["name"] = ""
             page_data["email"] = ""
             page_data["email"] = ""
-            page_data["order"] = ""
+            page_data["order_uid"] = ""
         return page_data

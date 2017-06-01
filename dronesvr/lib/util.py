@@ -102,6 +102,15 @@ class DBFunc:
     def get_all(self, field, table):
         return self._query("SELECT {} FROM {}".format(field,table), return_all=True)
 
+    # Get all values from all FIELDS in TABLE where QFIELD == QVAL
+    # If qfield2 and qval2 are supplied, AND is assumed.
+    # Example usage: DBFunc.get_all("uid","drones","userid",USERID)
+    def get_all_where(self, field, table, qfield, qval, qfield2=None, qval2=None):
+        if qfield2 is not None and qval2 is not None:
+            return self._query("SELECT {} FROM {} WHERE {}=%s AND {}=%s".format(field,table,qfield,qfield2),(qval,qval2),return_all=True)
+        else:
+            return self._query("SELECT {} FROM {} WHERE {}=%s".format(field,table,qfield),(qval,),return_all=True)
+
     ####################
     ### Job queueing ###
     ####################
@@ -199,8 +208,28 @@ class Timestamp:
 
     # Get current timestamp (string)
     @classmethod
-    def now(self):
-        return str(datetime.datetime.now())
+    def now(self, return_str=True):
+        the_time = datetime.datetime.now()
+        if return_str:
+            return str(the_time)
+        else:
+            return the_time
+
+    # Add time (hours, minutes, and/or seconds) to current datetime object
+    @classmethod
+    def add_time(self,datetime_object,hours=0,minutes=0,seconds=0,return_str=True):
+        new_time = datetime_object + datetime.timedelta(hours=hours,minutes=minutes,seconds=seconds)
+        if return_str:
+            return str(new_time)
+        else:
+            return new_time
+
+    # Display format time (HH:SS am/pm)
+    @classmethod
+    def format(self,datetime_object):
+        # Refer to: http://strftime.org/
+        # Formats time as: '4:27 pm'
+        return datetime_object.strftime('%-I:%M %p')
 
     # Get datetime object from timestamp string
     @classmethod
