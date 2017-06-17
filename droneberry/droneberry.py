@@ -199,7 +199,7 @@ class Drone:
 				if current_wp == mavutil.mavlink.MAV_CMD_NAV_LAND:
 					self._log('WAIT_LAND_HUB - proceeded to landing.')
 					self.set_action('landing')
-				if current_wp != mavutil.mavlink.MAV_CMD_NAV_LOITER_UNLIM:
+				if current_wp != mavutil.mavlink.MAV_CMD_NAV_LOITER_TIME:
 					self._log('WAIT_LAND_HUB - proceeded to flying.')
 					self.set_action('flying')
 					
