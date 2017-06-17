@@ -13,7 +13,7 @@
 ```
 sudo apt-get update
 sudo apt-get upgrade
-sudo apt-get install vim python-pip python-dev libxml2-dev libxslt-dev
+sudo apt-get install vim python-pip python-dev libxml2-dev libxslt-dev tmux
 sudo pip install requests monotonic future mavproxy dronekit pyserial pymavlink 
 ```
 
