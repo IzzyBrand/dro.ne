@@ -15,6 +15,8 @@ Connect FONA following this tutorial: https://github.com/initialstate/fona-raspb
 
 # Luna TODO list
 
+- replace pi 3 with pi zero
+- figure out what we really need / want on luna and 3d print a mount for everything
 - reach out to PVDonuts or something else... decide what we're dropping (?)
 - get drone working + put hours on it so we trust it
 - refactor API (?)
