@@ -2,7 +2,7 @@
 
 An access point allows computers to connect to and SSH into the Raspberry Pi even without a WiFi connection. When the Pi is in Access Point (AP) mode, you can connect to its wireless network with your computer and then SSH into it.
 
-Scripts from (Lewis Cowles)[https://gist.github.com/Lewiscowles1986/fecdeb4de0b45b2029c390].
+Scripts from [Lewis Cowles](https://gist.github.com/Lewiscowles1986/fecdeb4de0b45b2029c390).
 
 ## Getting Started ##
 
