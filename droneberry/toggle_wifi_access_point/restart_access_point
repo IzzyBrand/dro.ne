@@ -1,0 +1,15 @@
+echo "Setting Pi to Access Point mode"
+
+sudo cp access_point_conf/dhcpcd.conf.access_point /etc/dhcpcd.conf
+sudo cp access_point_conf/interfaces.access_point /etc/network/interfaces
+echo "Copied configuration files"
+
+sudo systemctl enable hostapd
+echo "Enabled hostapd"
+
+echo "Done"
+
+echo "Press ENTER to reboot Pi"
+read continue
+
+sudo reboot

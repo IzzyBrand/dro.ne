@@ -1,0 +1,15 @@
+echo "Setting Pi to Client mode"
+
+sudo cp client_conf/dhcpcd.conf.client /etc/dhcpcd.conf
+sudo cp client_conf/interfaces.client /etc/network/interfaces
+echo "Copied configuration files"
+
+sudo systemctl disable hostapd
+echo "Disabled hostapd"
+
+echo "Done"
+
+echo "Press any ENTER to reboot Pi"
+read continue
+
+sudo reboot
