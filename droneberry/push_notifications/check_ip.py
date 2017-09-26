@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 # Check for an internet connection, and if we find one, broadcast the current 
 # IP address (via push notification using PushSafer service). Otherwise, we
 # reboot the Raspberry Pi in access point mode.
@@ -15,7 +17,6 @@ RESTART_AP_BASH_PATH = "../toggle_wifi_access_point/restart_access_point"
 
 # Define internet adapter so that we can find our external IP address.
 ADAPTER = "wlan0"
-# ADAPTER = u"{7E33E52A-7BBD-4480-8B1E-BAFC69B2C26D}"
 
 # Parse client keys from pushsafer.keys configuration file.
 pushsafer_cfg = ConfigParser.ConfigParser()
