@@ -9,7 +9,13 @@ echo "Disabled hostapd"
 
 echo "Done"
 
-echo "Press any ENTER to reboot Pi"
-read continue
+echo "Rebooting in 3 seconds..."
+sleep 1
+echo "2 seconds..."
+sleep 1
+echo "1 second..."
+sleep 1
+
+echo "Rebooting."
 
 sudo reboot
